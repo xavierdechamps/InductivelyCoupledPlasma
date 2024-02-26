@@ -90,11 +90,11 @@
       call sampletime(time1)
       ok = 1
       write(*,*) "-------------------------------------------------------"
-      write(*,*) "Name of the mesh data : ", trim(adjustl(maillage))
+      write(*,*) "Name of the mesh data : ", trim(adjustl(mesh_file))
 
-      open(unit=10,file=maillage,status="old",iostat=ierr,form='formatted')
+      open(unit=10,file=mesh_file,status="old",iostat=ierr,form='formatted')
       if (ierr /= 0) then
-         write(*,*) "Error occuring : file '",trim(maillage),"' not found "
+         write(*,*) "Error occuring : file '",trim(mesh_file),"' not found "
          ok = 0
       end if
 
@@ -118,7 +118,7 @@
 
       do i=1,nbrtotNodes ! Lecture des coordonnées des noeuds
          read(10,*) a, nodeglob(1,i), nodeglob(2,i), b
-         if (a/=i) write(*,*) "merde dans le maillage"
+         if (a/=i) write(*,*) "merde dans le mesh_file"
       end do
 
       do while (line /="$Elements")
@@ -184,7 +184,7 @@
       subroutine setCLlink
 !-----------------------------------------------------------------------
 ! Créer un lien entre noeud de frontière et tag de condition au limite
-! Dans le maillage, la frontière est créée dans le sens anti-horlogique
+! Dans le mesh_file, la frontière est créée dans le sens anti-horlogique
       use module_icp
       implicit none
 

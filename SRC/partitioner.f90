@@ -32,7 +32,7 @@
 
       iverb = 0
       
-      write(*,'(a,a,a,i3,a)') ' Reading ',trim(maillage),' and splitting into ',nproc,' partitions'
+      write(*,'(a,a,a,i3,a)') ' Reading ',trim(mesh_file),' and splitting into ',nproc,' partitions'
 
       !-----------------------------------------------------------------
       ! Node reordering

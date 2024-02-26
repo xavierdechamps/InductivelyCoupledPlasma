@@ -1,38 +1,52 @@
 PROGRAM main
     USE module_icp
+    USE module_mem_allocate
     IMPLICIT NONE
     INCLUDE "mpif.h"
 
     ! Local parameters
     INTEGER(ki) :: ok,ierr
-    
-    write(*,*) "inside the program" 
-    
+        
     IF(COMMAND_ARGUMENT_COUNT().NE.1)THEN
         WRITE(*,*) "Incorrect number of arguments. Please launch the program as"
         WRITE(*,*) "icp name_of_parameter_file"
         GOTO 200
     ENDIF 
-    CALL get_command_argument(1,maillage)
+    CALL get_command_argument(1,mesh_file)
     
     call mpi_init(ierr)
     call mpi_comm_rank(mpi_comm_world,irank,ierr)
     call mpi_comm_size(mpi_comm_world,nproc,ierr)
 
     ! ------- Données du problème ----------
-    ! maillage     = "StructRafVertHor_fine.msh"
+    ! mesh_file     = "StructRafVertHor_fine.msh"
     file_gmsh    = "essai.msh"
     file_dat     = "essai.dat"
     file_restart = "essai.dat"
-    nbvar        = 2
     
     eps = 1.E-12
     ok = 1
     ! --------------------------------------
     ! if (irank.eq.0) then
-       ! call lecture_gmsh(ok)
+       CALL browse_gmsh(mesh_file,length_names,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,ok)
+       IF (ok == 0) THEN
+          WRITE(*,*) "The program hasn't started because of a problem during the browsing of the mesh"
+          GOTO 200
+       ENDIF
     ! endif
-
+    
+    ! Allocate the memory for the arrays
+    CALL mem_allocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond,&
+&                     nbrNodes,nbrElem,nbrFront,0)
+    
+    ! Read the mesh and the initial solution / boundary conditions
+    CALL read_gmsh(U0,nbvar*nbrElem,mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
+&                  BoundCond,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,0,ok)
+    IF (ok == 0) THEN
+      WRITE(*,*) "The program hasn't started because of a problem during the reading of the mesh"
+      GOTO 200
+    ENDIF
+    
 ! if (ok == 0) then
   ! write(*,*) "The program hasn't started because of a problem during the reading of the mesh"
   ! goto 200
@@ -64,8 +78,10 @@ PROGRAM main
 
 200 continue
     if (irank.eq.0) write(*,*) "End of the simulation"
-
-    call deallocate_end
+    
+    ! Deallocate the memory for the arrays
+    CALL mem_deallocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond)
+    ! call deallocate_end
     call mpi_finalize( ierr )
 
 end program

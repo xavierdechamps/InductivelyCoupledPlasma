@@ -180,7 +180,7 @@ END SUBROUTINE write_gmsh
 !  Goal: read the mesh and the initial solution in the Gmsh .msh format
 !##########################################################
 SUBROUTINE read_gmsh(U0,lengU0,mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
-&                    depth,BoundCond,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,skip_data,ok)
+&                    BoundCond,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,skip_data,ok)
     USE module_icp, only : kr,ki,nbvar,time_begin, time_end
     IMPLICIT NONE
 
@@ -190,7 +190,6 @@ SUBROUTINE read_gmsh(U0,lengU0,mesh_file,lengch,node,elem,nbr_nodes_per_elem,fro
     INTEGER(ki), INTENT(IN)  :: lengU0,lengch,skip_data
     REAL(kr), INTENT(OUT)    :: U0(lengU0)
     REAL(kr), INTENT(OUT)    :: node(nbrNodes,2)
-    REAL(kr), INTENT(OUT)    :: depth(nbrElem)
     REAL(kr), INTENT(OUT)    :: BoundCond(nbrFront,3)
     INTEGER(ki), INTENT(OUT)    :: elem(nbrElem,5)
     INTEGER(ki), INTENT(OUT)    :: front(nbrFront,4)
@@ -322,6 +321,7 @@ SUBROUTINE read_gmsh(U0,lengU0,mesh_file,lengch,node,elem,nbr_nodes_per_elem,fro
       END DO
       ind = ind + b
     END DO
+    WRITE(*,101) nbrNodes
     
     DO WHILE (line .NE. "$Elements")
       READ(10,*) line
@@ -364,164 +364,160 @@ SUBROUTINE read_gmsh(U0,lengU0,mesh_file,lengch,node,elem,nbr_nodes_per_elem,fro
 50  WRITE(*,102) nbrFront
     WRITE(*,103) nbrTris
     WRITE(*,104) nbrQuads
-
-    ! DO i=1,nbrFront
-      ! CALL find_elem_front(i,front(i,4),front,elem,nbrFront,nbrElem)
-    ! END DO
     
     IF (skip_data.EQ.1) GOTO 100
     
     ! Initial height
-    istep = 4
+    ! istep = 4
     
-    dataname = "Height"
-    DO WHILE (line .NE. "$ElementData")
-      READ(10,*,END=90) line
-    END DO
-    DO i=1,2
-      READ(10,*,END=90) line
-    ENDDO
-    IF (TRIM(line) .NE. 'Height') GO TO 90
-    DO i=1,5
-      READ(10,*,END=90) line
-    ENDDO
-    READ(10,*,END=90) a
-    IF (a.ne.nbrElem) THEN
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      WRITE(*,*) "Error reading the initial height."
-      WRITE(*,*) "The number of elements with initial height is",a
-      WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      ok = 0
-      GOTO 100
-    ENDIF
-    READ(10,*,END=90) (a,U0((i-1)*nbvar+1),i=1,nbrElem)
+    ! dataname = "Height"
+    ! DO WHILE (line .NE. "$ElementData")
+      ! READ(10,*,END=90) line
+    ! END DO
+    ! DO i=1,2
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! IF (TRIM(line) .NE. 'Height') GO TO 90
+    ! DO i=1,5
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! READ(10,*,END=90) a
+    ! IF (a.ne.nbrElem) THEN
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! WRITE(*,*) "Error reading the initial height."
+      ! WRITE(*,*) "The number of elements with initial height is",a
+      ! WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! ok = 0
+      ! GOTO 100
+    ! ENDIF
+    ! READ(10,*,END=90) (a,U0((i-1)*nbvar+1),i=1,nbrElem)
     
     ! Initial velocity
     
-    istep = 5
+    ! istep = 5
     
-    dataname = "Velocity"
-    DO WHILE (line .NE. "$ElementData")
-      READ(10,*,END=90) line
-    END DO
-    DO i=1,2
-      READ(10,*,END=90) line
-    ENDDO
-    IF (TRIM(line) .NE. 'Velocity') GO TO 90
-    DO i=1,5
-      READ(10,*,END=90) line
-    ENDDO
-    READ(10,*,END=90) a
+    ! dataname = "Velocity"
+    ! DO WHILE (line .NE. "$ElementData")
+      ! READ(10,*,END=90) line
+    ! END DO
+    ! DO i=1,2
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! IF (TRIM(line) .NE. 'Velocity') GO TO 90
+    ! DO i=1,5
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! READ(10,*,END=90) a
     
-    IF (a.ne.nbrElem) THEN
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      WRITE(*,*) "Error reading the initial velocity."
-      WRITE(*,*) "The number of elements with initial velocity is",a
-      WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      ok = 0
-      GOTO 100
-    ENDIF
-    READ(10,*,END=90) (a,U0((i-1)*nbvar+2),U0((i-1)*nbvar+3),tmp,i=1,nbrElem)
-    DO i=1,nbrElem
-      U0((i-1)*nbvar+2) = U0((i-1)*nbvar+1)*U0((i-1)*nbvar+2)
-      U0((i-1)*nbvar+3) = U0((i-1)*nbvar+1)*U0((i-1)*nbvar+3)
-    ENDDO
+    ! IF (a.ne.nbrElem) THEN
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! WRITE(*,*) "Error reading the initial velocity."
+      ! WRITE(*,*) "The number of elements with initial velocity is",a
+      ! WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! ok = 0
+      ! GOTO 100
+    ! ENDIF
+    ! READ(10,*,END=90) (a,U0((i-1)*nbvar+2),U0((i-1)*nbvar+3),tmp,i=1,nbrElem)
+    ! DO i=1,nbrElem
+      ! U0((i-1)*nbvar+2) = U0((i-1)*nbvar+1)*U0((i-1)*nbvar+2)
+      ! U0((i-1)*nbvar+3) = U0((i-1)*nbvar+1)*U0((i-1)*nbvar+3)
+    ! ENDDO
     
     ! depth
     
-    istep = 6
+    ! istep = 6
     
-    dataname = "Depth"
-    DO WHILE (line .NE. "$ElementData")
-      READ(10,*,END=90) line
-    END DO
-    DO i=1,2
-      READ(10,*,END=90) line
-    ENDDO
-    IF (TRIM(line) .NE. 'Depth') GO TO 90
-    DO i=1,5
-      READ(10,*,END=90) line
-    ENDDO
-    READ(10,*,END=90) a
-    IF (a.ne.nbrElem) THEN
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      WRITE(*,*) "Error reading the depth."
-      WRITE(*,*) "The number of elements with depth is",a
-      WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      ok = 0
-      GOTO 100
-    ENDIF
-    READ(10,*,END=90) (a,depth(i),i=1,nbrElem)
+    ! dataname = "Depth"
+    ! DO WHILE (line .NE. "$ElementData")
+      ! READ(10,*,END=90) line
+    ! END DO
+    ! DO i=1,2
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! IF (TRIM(line) .NE. 'Depth') GO TO 90
+    ! DO i=1,5
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! READ(10,*,END=90) a
+    ! IF (a.ne.nbrElem) THEN
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! WRITE(*,*) "Error reading the depth."
+      ! WRITE(*,*) "The number of elements with depth is",a
+      ! WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! ok = 0
+      ! GOTO 100
+    ! ENDIF
+    ! READ(10,*,END=90) (a,depth(i),i=1,nbrElem)
     
     ! Boundary condition - height
     
-    istep = 7
+    ! istep = 7
     
-    dataname = "Height_boundary"
-    DO WHILE (line .NE. "$ElementData")
-      READ(10,*,END=90) line
-    END DO
-    DO i=1,2
-      READ(10,*,END=90) line
-    ENDDO
-    IF (TRIM(line) .NE. trim(dataname)) GO TO 90
-    DO i=1,5
-      READ(10,*,END=90) line
-    ENDDO
-    READ(10,*,END=90) a
-    IF (a.ne.nbrFront) THEN
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      WRITE(*,*) "Error reading the boundary condition on the height."
-      WRITE(*,*) "The number of 1D elements with imposed height is",a
-      WRITE(*,*) "The number of 1D boundary elements in the mesh is",nbrFront
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      ok = 0
-      GOTO 100
-    ENDIF
-    READ(10,*,END=90) (a,BoundCond(i,1),i=1,nbrFront)
+    ! dataname = "Height_boundary"
+    ! DO WHILE (line .NE. "$ElementData")
+      ! READ(10,*,END=90) line
+    ! END DO
+    ! DO i=1,2
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! IF (TRIM(line) .NE. trim(dataname)) GO TO 90
+    ! DO i=1,5
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! READ(10,*,END=90) a
+    ! IF (a.ne.nbrFront) THEN
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! WRITE(*,*) "Error reading the boundary condition on the height."
+      ! WRITE(*,*) "The number of 1D elements with imposed height is",a
+      ! WRITE(*,*) "The number of 1D boundary elements in the mesh is",nbrFront
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! ok = 0
+      ! GOTO 100
+    ! ENDIF
+    ! READ(10,*,END=90) (a,BoundCond(i,1),i=1,nbrFront)
         
     ! Boundary condition - velocity
     
-    istep = 8
+    ! istep = 8
     
-    dataname = "Velocity_boundary"
-    DO WHILE (line .NE. "$ElementData")
-      READ(10,*,END=90) line
-    END DO
-    DO i=1,2
-      READ(10,*,END=90) line
-    ENDDO
-    IF (TRIM(line) .NE. trim(dataname)) GO TO 90
-    DO i=1,5
-      READ(10,*,END=90) line
-    ENDDO
-    READ(10,*,END=90) a    
-    IF (a.ne.nbrFront) THEN
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      WRITE(*,*) "Error reading the boundary condition on the velocity."
-      WRITE(*,*) "The number of 1D elements with imposed velocity is",a
-      WRITE(*,*) "The number of 1D boundary elements in the mesh is",nbrFront
-      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-      ok = 0
-      GOTO 100
-    ENDIF
-    READ(10,*,END=90) (a,BoundCond(i,2),BoundCond(i,3),tmp,i=1,nbrFront)
-    GOTO 100
+    ! dataname = "Velocity_boundary"
+    ! DO WHILE (line .NE. "$ElementData")
+      ! READ(10,*,END=90) line
+    ! END DO
+    ! DO i=1,2
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! IF (TRIM(line) .NE. trim(dataname)) GO TO 90
+    ! DO i=1,5
+      ! READ(10,*,END=90) line
+    ! ENDDO
+    ! READ(10,*,END=90) a    
+    ! IF (a.ne.nbrFront) THEN
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! WRITE(*,*) "Error reading the boundary condition on the velocity."
+      ! WRITE(*,*) "The number of 1D elements with imposed velocity is",a
+      ! WRITE(*,*) "The number of 1D boundary elements in the mesh is",nbrFront
+      ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ! ok = 0
+      ! GOTO 100
+    ! ENDIF
+    ! READ(10,*,END=90) (a,BoundCond(i,2),BoundCond(i,3),tmp,i=1,nbrFront)
+    ! GOTO 100
     
- 90 ok = 0
-    WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    WRITE(*,*) "Error reading the following data: ", TRIM(dataname)
-    WRITE(*,*) "Read the following data in the file: ", TRIM(line)
-    WRITE(*,*) "Check that the name of the mesh file points to the correct file"
-    WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+ ! 90 ok = 0
+    ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    ! WRITE(*,*) "Error reading the following data: ", TRIM(dataname)
+    ! WRITE(*,*) "Read the following data in the file: ", TRIM(line)
+    ! WRITE(*,*) "Check that the name of the mesh file points to the correct file"
+    ! WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
     
 100 CALL sampletime(time_end)
     CALL time_display
     WRITE(*,*) "-------------------------------------------------------"
-    101 FORMAT(" Number of node : ",T41,I6)
+    101 FORMAT(" Number of nodes : ",T41,I6)
     102 FORMAT(" Number of edge elements :", T41, I6)
     103 FORMAT(" Number of triangular surface elements :",T41,I6)
     104 FORMAT(" Number of rectangular surface elements :",T41,I6)
