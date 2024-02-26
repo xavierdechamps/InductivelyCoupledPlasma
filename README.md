@@ -19,12 +19,22 @@ git clone https://github.com/xavierdechamps/InductivelyCoupledPlasma.git
 
 ## Build the code
 
-The code can be compiled by CMake as the necessary files ([CMakeLists.txt](CMakeLists.txt) and [CMake.config](CMake.config)) are provided.
-The user can modify the content of [CMake.config](CMake.config) to his/her own configuration.
+The code can be compiled by CMake as the necessary files ([CMakeLists.txt](CMakeLists.txt) and [config.cmake](config.cmake)) are provided.
+The user can modify the content of [config.cmake](config.cmake) to his/her own configuration.
+The user must have the library MUMPS compiled and linked at hand in order to link with the present code.
 
 ```
 mkdir build
 cd build
 cmake ..
 make
+```
+
+## Run the code
+
+The parameters of the computation are specified in an external file, see the file [parameters](parameters) for an example.
+A mesh must be built from the .geo geometry file. The mesh generator must be Gmsh. The name of the mesh is then specified in the parameter file.
+Run the computation through the command
+```
+EXE\icp.exe parameters
 ```

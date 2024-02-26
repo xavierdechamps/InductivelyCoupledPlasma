@@ -1,0 +1,30 @@
+Mesh_wo_coils_rectangle_0.100.msh                                   : name of mesh file
+3                             : number of boundary types, the next 3 lines
+1                             : Far field, physical tag in gmsh
+2                             : Axis, physical tag in gmsh
+3                             : Torch, physical tag in gmsh
+Mesh_rectangle_0.100_sig100_sol.msh                               : name of the output, gmsh format
+Mesh_coarse_sol.dat                               : name of the output, dat format
+1.0                           : Icoil, intensity of the electric current in the coil
+100.0                        : sigma, electric conductivity of the plasma
+27600000.0                    : excitation frequency [Herz] of the coil
+3                             : number of coils
+0.04           0.019          : axial and radial coordinates of each coil
+0.053          0.019          : axial and radial coordinates of each coil
+0.066          0.019          : axial and radial coordinates of each coil
+
+
+0.027          0.019          : axial and radial coordinates of each coil
+0.079          0.019          : axial and radial coordinates of each coil
+0.014          0.019          : axial and radial coordinates of each coil
+0.092          0.019          : axial and radial coordinates of each coil
+0.001          0.019          : axial and radial coordinates of each coil
+0.105          0.019          : axial and radial coordinates of each coil
+0.0075          0.023          : axial and radial coordinates of each coil
+0.0205          0.023          : axial and radial coordinates of each coil
+0.0335          0.023          : axial and radial coordinates of each coil
+0.0465          0.023          : axial and radial coordinates of each coil
+0.0595          0.023          : axial and radial coordinates of each coil
+0.0725          0.023          : axial and radial coordinates of each coil
+0.0855          0.023          : axial and radial coordinates of each coil
+0.0985          0.023          : axial and radial coordinates of each coil
