@@ -23,7 +23,7 @@ PROGRAM main
     file_dat     = "essai.dat"
     
     Icoil = 1.0d00
-    sigma = 1000.d00
+    sigma = 10000.d00
     omega = 2.d00 * pi * 27.6e6
     mu0   = 4e-7*pi
     eps   = 1.E-12
@@ -31,6 +31,15 @@ PROGRAM main
     coils(1,1:2) = (/0.04d00  , 0.019d00/)
     coils(2,1:2) = (/0.053d00 , 0.019d00/)
     coils(3,1:2) = (/0.066d00 , 0.019d00/)
+    
+    coils(4,1:2) = (/0.027d00  , 0.019d00/)
+    coils(5,1:2) = (/0.079d00  , 0.019d00/)
+    
+    coils(6,1:2) = (/0.014d00  , 0.019d00/)
+    coils(7,1:2) = (/0.092d00  , 0.019d00/)
+    
+    coils(8,1:2) = (/0.001d00  , 0.019d00/)
+    coils(9,1:2) = (/0.105d00  , 0.019d00/)
     
     ok = 1
     ! --------------------------------------
@@ -65,15 +74,12 @@ PROGRAM main
     call getStiffness()
 
    ! if (irank.eq.0) write(*,*) "Imposing the boundary conditions"
-   call setCL
+   call setBC()
 
-   ! if (type_solver==1) then
+   CALL solve(ok)
       ! call resolution(ok)
-   ! else
-      ! call resolution2(ok)
-   ! endif
    
-   CALL write_gmsh()
+   CALL write_gmsh(ok)
    
    ! if (ok.eq.1 .and. irank.eq.0) call ecriture_gmsh
    

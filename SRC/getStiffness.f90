@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-      subroutine setCL()
+      subroutine setBC()
 !-----------------------------------------------------------------------
       use module_icp
       implicit none
@@ -14,31 +14,36 @@
            ! real part
            idof = ( inode - 1 )*nbvar+1
            call setdiag_csr(idof)
-           rhs(idof) = 1.0d00
+           rhs(idof) = 0.0d00
            
            ! imaginary part
            idof = idof+1
            call setdiag_csr(idof)
-           rhs(idof) = 1.0d00
+           rhs(idof) = 0.0d00
            
            ! Second node of the edge element
            inode = front(i,2)
            ! real part
            idof = ( inode - 1 )*nbvar+1
            call setdiag_csr(idof)
-           rhs(idof) = 1.0d00
+           rhs(idof) = 0.0d00
            
            ! imaginary part
            idof = idof+1
            call setdiag_csr(idof)
-           rhs(idof) = 1.0d00
+           rhs(idof) = 0.0d00
            
          endif
          
       end do
+      
+      ! write(*,*) "---------------------- MAT after BC"
+      ! write(*,*) mat(1:ia(nbrNodes*nbvar+1)-1)
+      ! write(*,*) "---------------------- RHS after BC"
+      ! write(*,*) rhs(:)
 
 !-----------------------------------------------------------------------
-      end subroutine setCL
+      end subroutine setBC
 !-----------------------------------------------------------------------
 
 
@@ -66,6 +71,9 @@
       do k=1,nbrElem
          call getStiffLoc(k,stiffmat,matK5)
          
+         ! write(*,*) "stiffmat for elem ",k
+         ! write(*,*) stiffmat
+         
          do i=1,nodelm
             inod = elem(k,i)
             do j=1,nodelm
@@ -89,7 +97,19 @@
             
          end do
       end do
-            
+      
+      
+      ! write(*,*) "---------------------- IA "
+      ! write(*,*) ia(1:nbrNodes*nbvar+1)
+      ! write(*,*) "---------------------- JA "
+      ! write(*,*) ja(1:ia(nbrNodes*nbvar+1)-1)
+      ! write(*,*) "---------------------- MAT"
+      ! write(*,*) mat(1:ia(nbrNodes*nbvar+1)-1)
+      ! write(*,*) "---------------------- RHS"
+      ! write(*,*) rhs(:)
+      
+      
+      
 !-----------------------------------------------------------------------
       end subroutine getStiffness
 !-----------------------------------------------------------------------
@@ -110,7 +130,7 @@
       real(kr)    :: matK3(1:nodelm*nbvar,1:nodelm*nbvar)
       real(kr)    :: matK4(1:nodelm*nbvar,1:nodelm*nbvar)
       real(kr)    :: matK5(1:nodelm*nbvar,1:nodelm*nbvar)
-      integer(ki) :: ii,jj
+      integer(ki) :: ii,jj,plasma
       real(kr)    :: delta(3,3)
       
       stiff = zero
@@ -119,6 +139,9 @@
       matK4 = zero
       matK5 = zero
       delta = zero
+      
+      CALL isPlasma(ielm,plasma)
+      CALL getSigma(sigma,plasma)
       
       r1 = node(elem(ielm,1),2)
       r2 = node(elem(ielm,2),2)
@@ -170,10 +193,45 @@
       matK1 = - matK1 * r123 / (12.0d00 * surf)
       matK3 = - matK3 * r123 / (12.0d00 * surf)
       matK4 = - matK4 * abs(det)
-      matK5 =   matK5 * omega * mu0 * sigma * surf / 60.0d00
+      matK5 = - matK5 * omega * mu0 * sigma * surf / 60.0d00
+      
+      ! write(*,*) "k1+k3"
+      ! write(*,*) matk1+matk3
       
       stiff = matK1 + matK3 + matK4 + matK5
 
 !-----------------------------------------------------------------------
       end subroutine getStiffLoc
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+      subroutine isPlasma(ielm,plasma)
+!-----------------------------------------------------------------------
+      use module_icp
+      implicit none
+      
+      integer(ki) :: ielm,plasma
+      
+      plasma = 0
+      if (elem(ielm,5) .eq. 2) plasma = 1
+!-----------------------------------------------------------------------
+      end subroutine isPlasma
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+      subroutine getSigma(sig,plasma)
+!-----------------------------------------------------------------------
+      use module_icp
+      implicit none
+      
+      real(kr) :: sig
+      integer(ki) :: plasma
+      
+      sig = zero
+      if (plasma.eq.1) sig = 10000.d00 
+
+!-----------------------------------------------------------------------
+      end subroutine getSigma
 !-----------------------------------------------------------------------

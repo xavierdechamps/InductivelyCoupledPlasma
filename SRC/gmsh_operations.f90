@@ -121,10 +121,10 @@ SUBROUTINE write_gmsh()
        WRITE(10,'(T1,A12)') "$EndElements"
     
     !*************************************
-    ! Write the height
+    ! Write the electric field due to the coils
     WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A9)') '"Ecoils"'
+    WRITE(10,'(T1,A9)') '"E_coils"'
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,'//numdig//')') 1
     WRITE(10,'(T1,A1)') "3"
@@ -132,6 +132,90 @@ SUBROUTINE write_gmsh()
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,'//numdig//')') nbrNodes
     WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Ecoils(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the induced electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A16)') '"E_induced_real"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, U0(2*i-1),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the induced electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A16)') '"E_induced_imag"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, U0(2*i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the total electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A12)') '"E_tot_real"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, U0(2*i-1),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the total electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A12)') '"E_tot_imag"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, (U0(2*i)+Ecoils(i)),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the norm of the total electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A12)') '"E_tot_norm"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, sqrt(U0(2*i-1)**2 + (U0(2*i)+Ecoils(i))**2),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the phase of the total electric field
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A13)') '"E_tot_phase"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 1
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 180.0d00/pi*atan2(U0(2*i)+Ecoils(i),U0(2*i-1)),i=1,nbrNodes)
     WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
