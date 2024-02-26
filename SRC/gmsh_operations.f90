@@ -82,25 +82,14 @@ END SUBROUTINE read_solution
 !SUBROUTINE write_gmsh
 !  Goal: write the solution in the Gmsh .msh format
 !##########################################################
-SUBROUTINE write_gmsh(U0,lengU0,file_gmsh,lengch,node,elem,front,nbrNodes,nbrElem,nbrTris,nbrQuads,&
-&                     nbrFront,nbr_nodes_per_elem,k,count)
-    USE module_icp, only : kr,ki,nbvar,eps
+! SUBROUTINE write_gmsh(U0,lengU0,file_gmsh,lengch,node,elem,front,nbrNodes,nbrElem,nbrTris,nbrQuads,&
+! &                     nbrFront,nbr_nodes_per_elem,k,count)
+SUBROUTINE write_gmsh()
+    USE module_icp
     IMPLICIT NONE
-
-    ! Subroutine parameters
-    INTEGER(ki), INTENT(IN) :: k, count, nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront
-    INTEGER(ki), INTENT(IN) :: lengU0,lengch
-    REAL(kr), INTENT(IN)    :: U0(lengU0)
-    REAL(kr), INTENT(IN)    :: node(nbrNodes,2)
-    INTEGER(ki), INTENT(IN) :: elem(nbrElem,5)
-    INTEGER(ki), INTENT(IN) :: front(nbrFront,4)
-    INTEGER(ki), INTENT(IN) :: nbr_nodes_per_elem(nbrElem)
-    CHARACTER(LEN=lengch), INTENT(IN) :: file_gmsh
     
     ! Local parameters
     INTEGER(ki) :: ierr, i, fin, numdigits
-    REAL(kr) :: h, u, v
-    REAL(kr), DIMENSION(1) :: Froude(1:nbrElem)
     CHARACTER(LEN=2) :: numdig
     CHARACTER(LEN=9) :: formatreal
     
@@ -110,8 +99,6 @@ SUBROUTINE write_gmsh(U0,lengU0,file_gmsh,lengch,node,elem,front,nbrNodes,nbrEle
     CALL get_number_digits_integer(nbrNodes,numdigits)
     WRITE(numdig,'(A,I1)') 'I',numdigits+1
         
-    ! Write the mesh data (nodes and elements)
-    IF (k==0) THEN
        OPEN(UNIT=10,FILE=file_gmsh,STATUS="replace",IOSTAT=ierr,FORM='formatted')
        WRITE(10,'(T1,A11)') "$MeshFormat"
        WRITE(10,'(T1,A7)') "2.2 0 8"
@@ -132,23 +119,20 @@ SUBROUTINE write_gmsh(U0,lengU0,file_gmsh,lengch,node,elem,front,nbrNodes,nbrEle
          END IF 
        ENDDO  
        WRITE(10,'(T1,A12)') "$EndElements"
-    ELSE
-       OPEN(UNIT=10,FILE=file_gmsh,STATUS="old",ACCESS="append",IOSTAT=ierr,FORM='formatted')
-    END IF
     
     !*************************************
     ! Write the height
-    WRITE(10,'(T1,A12)') "$ElementData"
+    WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A9)') '"Height"'
+    WRITE(10,'(T1,A9)') '"Ecoils"'
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') k
+    WRITE(10,'(T1,'//numdig//')') 1
     WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') count
+    WRITE(10,'(T1,'//numdig//')') 1
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, U0(i*nbvar-2),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Ecoils(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the velocity vector, compute the Froude number in a loop
@@ -344,7 +328,7 @@ SUBROUTINE read_gmsh(U0,lengU0,mesh_file,lengch,node,elem,nbr_nodes_per_elem,fro
           READ(10,*) a,elem(inde,1),elem(inde,2),elem(inde,3)
           CALL find_vector(entities_surfs(:,1),entnums,tag,d,e)
           elem(inde,5) = entities_surfs(d,2)
-          
+                    
         ELSE IF (ind .EQ. 3) THEN ! Quadrangle
           inde = inde + 1
           nbr_nodes_per_elem(inde) = 4

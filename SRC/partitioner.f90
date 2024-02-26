@@ -218,13 +218,13 @@
         call mpi_barrier(mpi_comm_world,ierr)
         call mpi_allreduce(nbrnodes,nummaxnodes,1,mpi_integer,mpi_max,mpi_comm_world,ierr)
 
-        allocate (node(1:2,1:nbrnodes))
-        allocate (loc2glob(1:nummaxnodes))
-        node = 0.d0
-        loc2glob = 0
-        do i = 1,nbrnodes
-           read(11,*) loc2glob(i), node(1:2,i) !numglob + coord
-        enddo
+        ! allocate (node(1:2,1:nbrnodes))
+        ! allocate (loc2glob(1:nummaxnodes))
+        ! node = 0.d0
+        ! loc2glob = 0
+        ! do i = 1,nbrnodes
+           ! read(11,*) loc2glob(i), node(1:2,i) !numglob + coord
+        ! enddo
         close(11)
 
         do

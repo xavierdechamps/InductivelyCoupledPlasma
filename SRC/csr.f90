@@ -7,7 +7,8 @@
       ! Variables passed through header
       integer(ki) :: numnz,nbrnodes,nbrelem
       integer(ki) :: sstencil(1:nbrNodes,1:maxstencil)
-      integer(ki) :: lnk(1:3,1:nbrElem)
+      ! integer(ki) :: lnk(1:3,1:nbrElem)
+      integer(ki) :: lnk(1:nbrElem,1:3)
       integer(ki) :: stiffcsr(1:nbvar,1:nbvar)
       integer(ki) :: iacsr(*)
       integer(ki) :: jacsr(*)
@@ -20,16 +21,16 @@
 
       ! Generate ia and ja matrices
       sstencil = -1
-
+      
       do inod = 1,nbrNodes
         sstencil(inod,1) = inod
       enddo
-
+      
       do ielm=1,nbrElem !loop over elements
         do i=1,nodelm  !loop over nodes in each element
-          inod=lnk(i,ielm)
+          inod=lnk(ielm,i)
           do j=1,nodelm
-            jnod=lnk(j,ielm)
+            jnod=lnk(ielm,j)
             !inod has jnod in its stencil. 
             !store if not yet included in stencil
             do k = 1,maxstencil
@@ -45,7 +46,7 @@
           enddo
         enddo
       enddo
-
+      
       ! Reorder nodes within stencil
       do inod = 1,nbrNodes
         stenciltmp = sstencil(inod,2:maxstencil)
@@ -54,14 +55,14 @@
       enddo    
 
       allocate (nbneighbours(1:nbrNodes)); nbneighbours = 0
-
+      
       do i=1,nbrNodes
         do k =1, maxstencil
           if (sstencil(i,k).eq.-1) exit
         enddo
         nbneighbours(i) = k-1
       enddo
-
+      
       index   = 0 
       do i = 1, nbrNodes
         do l = 1, nbvar !loops over a single row in the system matrix
@@ -69,7 +70,10 @@
           do j = 1, nbneighbours(i)
             do k = 1, nbvar
               if (stiffcsr(l,k) .ne. 0) then
-                jacsr(index+1) = sstencil(i,j)*nbvar+k-1
+              
+              ! write(*,*) i,l,j,k,index+1,(sstencil(i,j)-1)*nbvar+k
+              
+                jacsr(index+1) = (sstencil(i,j)-1)*nbvar+k
                 index = index + 1
               endif
             enddo
@@ -138,15 +142,25 @@
       integer(ki) :: i,irow,icol
 
       ! Remember: arrays start at position 1
-      irow=(rnod*nbvar)
-      icol=(cnod*nbvar)
+      irow=(rnod-1)*nbvar+lrow
+      icol=(cnod-1)*nbvar+lcol
+      
+      ! write(*,*) rnod,cnod,lrow,lcol
+      ! write(*,'(a,2i3)') "irow,icol",irow,icol
+      
       do i=ia(irow),(ia(irow+1)-1)
         if(ja(i).eq.icol) then
+        
           mat(i)=mat(i)+value
+          
+        ! write(*,*) i,icol,value,mat(i)
+        
           exit
         endif
       enddo
-
+      
+      ! write(*,*) "////"
+      
       if(i==ia(irow+1)) then
         write(*,*) 'addvalue_csr: location not found in csr matrix'
         write(*,*) 'irow,icol',irow,icol
@@ -173,9 +187,9 @@
       do i=ia(irow),ia(irow+1)-1
         icol=ja(i)
         if(irow.eq.icol) then
-          mat(i)=1.
+          mat(i)=1.0d00
         else
-          mat(i)=0.
+          mat(i)=zero
         endif
       enddo
       

@@ -1,6 +1,5 @@
 PROGRAM main
     USE module_icp
-    USE module_mem_allocate
     IMPLICIT NONE
     INCLUDE "mpif.h"
 
@@ -22,9 +21,17 @@ PROGRAM main
     ! mesh_file     = "StructRafVertHor_fine.msh"
     file_gmsh    = "essai.msh"
     file_dat     = "essai.dat"
-    file_restart = "essai.dat"
     
-    eps = 1.E-12
+    Icoil = 1.0d00
+    sigma = 1000.d00
+    omega = 2.d00 * pi * 27.6e6
+    mu0   = 4e-7*pi
+    eps   = 1.E-12
+    
+    coils(1,1:2) = (/0.04d00  , 0.019d00/)
+    coils(2,1:2) = (/0.053d00 , 0.019d00/)
+    coils(3,1:2) = (/0.066d00 , 0.019d00/)
+    
     ok = 1
     ! --------------------------------------
     ! if (irank.eq.0) then
@@ -37,7 +44,10 @@ PROGRAM main
     
     ! Allocate the memory for the arrays
     CALL mem_allocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond,&
+&                     rhs,stencil,stiffness,ia,ja,mat,&
 &                     nbrNodes,nbrElem,nbrFront,0)
+    
+    CALL init()
     
     ! Read the mesh and the initial solution / boundary conditions
     CALL read_gmsh(U0,nbvar*nbrElem,mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
@@ -47,40 +57,33 @@ PROGRAM main
       GOTO 200
     ENDIF
     
-! if (ok == 0) then
-  ! write(*,*) "The program hasn't started because of a problem during the reading of the mesh"
-  ! goto 200
-! else
-   ! if (irank.eq.0) call partitioner
-   
-   ! call mpi_barrier(mpi_comm_world,ierr)
-   ! call readPartition
-
-   ! call init
-   ! if (irank.eq.0) write(*,*) "Constructing the CSR structure"
-   ! call createcsr(stencil,elem,stiffness,ia,ja,nbrnodes,nbrelem,numnz) 
-
-   ! if (irank.eq.0) write(*,*) "Constructing the stiffness matrix"
-   ! call getStiffness
+    ! CALL partitioner()
+    if (irank.eq.0) write(*,*) "Constructing the CSR structure"
+    call createcsr(stencil,elem(:,1:3),stiffness,ia,ja,nbrnodes,nbrelem,numnz) 
+    
+    if (irank.eq.0) write(*,*) "Constructing the stiffness matrix"
+    call getStiffness()
 
    ! if (irank.eq.0) write(*,*) "Imposing the boundary conditions"
-   ! call setCL
+   call setCL
 
    ! if (type_solver==1) then
       ! call resolution(ok)
    ! else
       ! call resolution2(ok)
    ! endif
-
+   
+   CALL write_gmsh()
+   
    ! if (ok.eq.1 .and. irank.eq.0) call ecriture_gmsh
    
-! endif
 
 200 continue
     if (irank.eq.0) write(*,*) "End of the simulation"
     
     ! Deallocate the memory for the arrays
-    CALL mem_deallocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond)
+    CALL mem_deallocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond,&
+&                       rhs,stencil,stiffness,ia,ja,mat)
     ! call deallocate_end
     call mpi_finalize( ierr )
 

@@ -48,8 +48,8 @@
       !call time_display
 
       do k=1,numnz
-         iaa(k) = loc2glob(iaa(k))
-         jaa(k) = loc2glob(ja(k))
+         ! iaa(k) = loc2glob(iaa(k))
+         ! jaa(k) = loc2glob(ja(k))
       enddo
 
       if (irank.eq.0) mumps_PAR%N = n
@@ -68,7 +68,7 @@
       loc2globall = 0
       rhsall   = 0.d0
 
-      call mpi_allgather(loc2glob(1),nummaxnodes,mpi_integer,loc2globall(1,0),nummaxnodes,mpi_integer,mpi_comm_world,ierr)
+      ! call mpi_allgather(loc2glob(1),nummaxnodes,mpi_integer,loc2globall(1,0),nummaxnodes,mpi_integer,mpi_comm_world,ierr)
 
       if (kr==4) then
          call mpi_allgather(rhs(1),nummaxnodes,mpi_real,rhsall(1,0),nummaxnodes,mpi_real,mpi_comm_world,ierr)
@@ -205,7 +205,7 @@
 
       call mpi_allgather(ia(1),nummaxnodes*nbvar+1,mpi_integer,ia1(1,0),nummaxnodes*nbvar+1,mpi_integer,mpi_comm_world,ierr)
       call mpi_allgather(ja(1),nummaxnz,mpi_integer,ja1(1,0),nummaxnz,mpi_integer,mpi_comm_world,ierr)
-      call mpi_allgather(loc2glob(1),nummaxnodes,mpi_integer,loc2globall(1,0),nummaxnodes,mpi_integer,mpi_comm_world,ierr)
+      ! call mpi_allgather(loc2glob(1),nummaxnodes,mpi_integer,loc2globall(1,0),nummaxnodes,mpi_integer,mpi_comm_world,ierr)
       if (kr==4) then
          call mpi_allgather(mat(1),nummaxnz,mpi_real,stiffmat1(1,0),nummaxnz,mpi_real,mpi_comm_world,ierr)
       elseif (kr==8) then

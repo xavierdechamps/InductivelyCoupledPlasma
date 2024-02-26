@@ -1,53 +1,40 @@
 !-----------------------------------------------------------------------
-      subroutine setCL
+      subroutine setCL()
 !-----------------------------------------------------------------------
       use module_icp
       implicit none
 
-      integer(ki) :: i,noeud
-
+      integer(ki) :: i,idof,inode
+            
       do i=1,nbrFront
-         noeud = front(1,i)
-         ! 8 = gauche, 9 = haut, 10 = droite, 11 = bas
-         select case (front(3,i))
-         case (8) ! gauche
-            call setdiag_csr(noeud)
-            rhs(noeud) = 1.
-         case (9) ! haut
-            call setdiag_csr(noeud)
-            rhs(noeud) = 1.
-         case (10) ! droite
-            ! if (typeCLdroite == 2) then
-               call setdiag_csr(noeud)
-               rhs(noeud) = node(2,noeud)*2.
-            ! end if
-         case (11) ! bas
-            call setdiag_csr(noeud)
-            rhs(noeud) = 0.
-         case default
-            write(*,*) "Unknown type of BC"
-         end select
-
-         noeud = front(2,i)
-         ! 8 = gauche, 9 = haut, 10 = droite, 11 = bas
-         select case (front(3,i))
-         case (8) ! gauche
-            call setdiag_csr(noeud)
-            rhs(noeud) = 1.
-         case (9) ! haut
-            call setdiag_csr(noeud)
-            rhs(noeud) = 1.
-         case (10) ! droite
-            ! if (typeCLdroite == 2) then
-               call setdiag_csr(noeud)
-               rhs(noeud) = node(2,noeud)*2.
-            ! end if
-         case (11) ! bas
-            call setdiag_csr(noeud)
-            rhs(noeud) = 0.
-         case default
-            write(*,*) "Unknown type of BC"
-         end select
+       ! on circle or on axis
+         if (front(i,3).eq.1 .or. front(i,3).eq.2) then
+          ! First node of the edge element
+           inode = front(i,1)
+           ! real part
+           idof = ( inode - 1 )*nbvar+1
+           call setdiag_csr(idof)
+           rhs(idof) = 1.0d00
+           
+           ! imaginary part
+           idof = idof+1
+           call setdiag_csr(idof)
+           rhs(idof) = 1.0d00
+           
+           ! Second node of the edge element
+           inode = front(i,2)
+           ! real part
+           idof = ( inode - 1 )*nbvar+1
+           call setdiag_csr(idof)
+           rhs(idof) = 1.0d00
+           
+           ! imaginary part
+           idof = idof+1
+           call setdiag_csr(idof)
+           rhs(idof) = 1.0d00
+           
+         endif
+         
       end do
 
 !-----------------------------------------------------------------------
@@ -56,90 +43,136 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine getStiffness
+      subroutine getStiffness()
 !-----------------------------------------------------------------------
       use module_icp
       implicit none
 
-      integer(ki) :: k,l,i,j,inod,jnod
+      integer(ki) :: k,l,i,j,inod,jnod,m,n
       real(kr)    :: stiffmat(1:nbvar*nodelm,1:nbvar*nodelm)
-
+      real(kr)    :: matK5   (1:nbvar*nodelm,1:nbvar*nodelm)
+      
+      ! write(*,*) "---------------------- IA "
+      ! write(*,*) ia(1:nbrNodes*nbvar+1)
+      ! write(*,*) "---------------------- JA "
+      ! write(*,*) ja(1:ia(nbrNodes*nbvar+1))
+      ! write(*,*) "----------------------"
+      
+      ! write(*,*) elem(1,1:3)
+      ! write(*,*) elem(2,1:3)
+      
+      call getEcoils()
+      
       do k=1,nbrElem
-         call getStiffLoc(k,stiffmat)
-         l = 1
+         call getStiffLoc(k,stiffmat,matK5)
+         
          do i=1,nodelm
-            inod = elem(i,k)
+            inod = elem(k,i)
             do j=1,nodelm
-               jnod = elem(j,k)
-               call addvalue_csr(inod,jnod,ii(l),jj(l),stiffmat(ii(l),jj(l)))
-               l = l+1
+               jnod = elem(k,j)
+               do m=1,nbvar
+                  do n=1,nbvar
+                  
+                  ! write(*,'(7I3)')k,i,j,m,n,inod,jnod
+                  
+                     call addvalue_csr(inod,jnod,m,n,stiffmat((i-1)*nbvar+m,(j-1)*nbvar+n))
+                  enddo
+               enddo
+               
+               ! add contribution of the element to the RHS
+               ! Ecoils is purely imaginary, thus pick only corresponding 
+               ! terms in the matK5 matrix
+               rhs((inod-1)*nbvar+1) = rhs((inod-1)*nbvar+1) - &
+     &             matK5((i-1)*nbvar+1,(j-1)*nbvar+2) * Ecoils(jnod)
+               
             end do
+            
          end do
-
       end do
+            
 !-----------------------------------------------------------------------
       end subroutine getStiffness
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-      subroutine getStiffLoc(i,stiff)
+      subroutine getStiffLoc(ielm,stiff,matK5)
 !-----------------------------------------------------------------------
       use module_icp
       implicit none
-
-      integer(ki),intent(in)  :: i
+      
+      integer(ki),intent(in)  :: ielm
       real(kr),intent(out)    :: stiff(1:nodelm*nbvar,1:nodelm*nbvar)
-      real(kr)    :: xa,xb,xc,ya,yb,yc,surf,tau,a1,a2,a3,b1,b2,b3,det,h,ksi
-      real(kr)    :: matAa(1:nodelm*nbvar,1:nodelm*nbvar)
-      real(kr)    :: matB(1:nodelm*nbvar,1:nodelm*nbvar)
-      real(kr)    :: matS(1:nodelm*nbvar,1:nodelm*nbvar)
-
-      a1 = node(2,elem(2,i)) - node(2,elem(3,i))
-      a2 = node(2,elem(3,i)) - node(2,elem(1,i))
-      a3 = node(2,elem(1,i)) - node(2,elem(2,i))
-      b1 = node(1,elem(3,i)) - node(1,elem(2,i))
-      b2 = node(1,elem(1,i)) - node(1,elem(3,i))
-      b3 = node(1,elem(2,i)) - node(1,elem(1,i))
-      det = (b3*a2)-(b2*a3)
-      h = 2*abs(det)/(abs(a1)+abs(a2)+abs(a3))
-      surf = abs(det)*0.5
-
-      matAa(1,1:3) = (/a1*a1+b1*b1,a1*a2+b1*b2,a1*a3+b1*b3/)
-      matAa(2,1:3) = (/a1*a2+b1*b2,a2*a2+b2*b2,a2*a3+b2*b3/)
-      matAa(3,1:3) = (/a1*a3+b1*b3,a2*a3+b2*b3,a3*a3+b3*b3/)
-      matAa = matAa/(2*abs(det))
-
-      matB(1,1:3) = (/a1,a2,a3/)
-      matB(2,1:3) = (/a1,a2,a3/)
-      matB(3,1:3) = (/a1,a2,a3/)
-      matB = matB/6
-
-      tau = zero
-      matS = zero
+      real(kr)    :: xa,xb,xc,ya,yb,yc,surf,tau,ri,rj
+      real(kr)    :: n1r,n2r,n3r,n1z,n2z,n3z,r123,det,h,ksi
+      real(kr)    :: nr(3),nz(3),na(3),nb(3),nc(3),nd(3)
+      real(kr)    :: a,b,c,d,r1,r2,r3
+      real(kr)    :: matK1(1:nodelm*nbvar,1:nodelm*nbvar)
+      real(kr)    :: matK3(1:nodelm*nbvar,1:nodelm*nbvar)
+      real(kr)    :: matK4(1:nodelm*nbvar,1:nodelm*nbvar)
+      real(kr)    :: matK5(1:nodelm*nbvar,1:nodelm*nbvar)
+      integer(ki) :: ii,jj
+      real(kr)    :: delta(3,3)
+      
       stiff = zero
-      ! if (type_reso /= 1) then
-         matS(1,1:3) = (/a1*a1,a1*a2,a1*a3/)
-         matS(2,1:3) = (/a2*a1,a2*a2,a2*a3/)
-         matS(3,1:3) = (/a3*a1,a3*a2,a3*a3/)
-         matS = matS/(2*abs(det))
-
-         ! if (type_reso==2) then
-            ! h  =  2*sqrt(surf/pi)
-         ! elseif(type_reso==3) then
-            ! h = 2*abs(det)/(abs(a1)+abs(a2)+abs(a3));
-         ! end if
-
-         ! if (u*h/(6*alpha)>1) then
-            ! ksi = 1.
-         ! else
-            ! ksi = u*h/(6*alpha)
-         ! end if
-
-         ! tau = h*ksi/(2*u)
-
-      ! end if
-
-      ! stiff = alpha*matAa + u*matB + tau*u*u*matS
+      matK1 = zero
+      matK3 = zero
+      matK4 = zero
+      matK5 = zero
+      delta = zero
+      
+      r1 = node(elem(ielm,1),2)
+      r2 = node(elem(ielm,2),2)
+      r3 = node(elem(ielm,3),2)
+      n1z = r3 - r2! -r2+r3
+      n2z = r1 - r3 ! -r3+r1
+      n3z = r2 - r1 ! -r1+r2
+      n1r = -node(elem(ielm,3),1) + node(elem(ielm,2),1) ! -z3+z2
+      n2r = -node(elem(ielm,1),1) + node(elem(ielm,3),1) ! -z1+z3
+      n3r = -node(elem(ielm,2),1) + node(elem(ielm,1),1) ! -z2+z1 
+      nz(1:3) = (/n1z,n2z,n3z/)
+      nr(1:3) = (/n1r,n2r,n3r/)
+      det = (n3r*n2z)-(n2r*n3z)
+      surf = abs(det)*0.5
+      r123 = r1 + r2 + r3
+      
+      ! Shape functions at the quadrature points
+      na(1:3) = (/1.0d00 , 1.0d00, 1.0d00/) / 3.0d00
+      nb(1:3) = (/0.2d00 , 0.2d00, 0.6d00/) 
+      nc(1:3) = (/0.2d00 , 0.6d00, 0.2d00/) 
+      nd(1:3) = (/0.6d00 , 0.2d00, 0.2d00/) 
+      
+      ! Weights for the quadrature of Ni Nj / r
+      a = - 81.0d00/(96.0d00*r123)
+      b = 25.0d00/(96.0d00*(0.20d00*r1+0.20d00*r2+0.60d00*r3))
+      c = 25.0d00/(96.0d00*(0.20d00*r1+0.60d00*r2+0.20d00*r3))
+      d = 25.0d00/(96.0d00*(0.60d00*r1+0.20d00*r2+0.20d00*r3))
+      
+      DO ii=1,3
+        delta(ii,ii) = 1.0d00
+        ri = node(elem(ielm,ii),2)
+        DO jj=1,3
+          rj = node(elem(ielm,jj),2)
+          
+          matK1(2*ii-1,2*jj-1) = nr(ii)*nr(jj)
+          matK1(2*ii  ,2*jj  ) = matK1(2*ii-1,2*jj-1)
+          
+          matK3(2*ii-1,2*jj-1) = nz(ii)*nz(jj)
+          matK3(2*ii  ,2*jj  ) = matK3(2*ii-1,2*jj-1)
+          
+          matK4(2*ii-1,2*jj-1) = a*na(ii)*na(jj)+b*nb(ii)*nb(jj)+ &
+     &                           c*nc(ii)*nc(jj)+d*nd(ii)*nd(jj)
+          matK4(2*ii  ,2*jj  ) = matK4(2*ii-1,2*jj-1)
+          
+          matK5(2*ii  ,2*jj-1) = (r123 + ri + rj)*(1.0d00 + delta(ii,jj))
+          matK5(2*ii-1,2*jj  ) = - matK5(2*ii  ,2*jj-1)
+        ENDDO 
+      ENDDO
+      matK1 = - matK1 * r123 / (12.0d00 * surf)
+      matK3 = - matK3 * r123 / (12.0d00 * surf)
+      matK4 = - matK4 * abs(det)
+      matK5 =   matK5 * omega * mu0 * sigma * surf / 60.0d00
+      
+      stiff = matK1 + matK3 + matK4 + matK5
 
 !-----------------------------------------------------------------------
       end subroutine getStiffLoc
