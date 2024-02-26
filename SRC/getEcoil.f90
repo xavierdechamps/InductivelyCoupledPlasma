@@ -19,7 +19,7 @@
             Zc = coils(c,1)
             Rc = coils(c,2)
             
-            IF (abs(r-Rc).gt.eps .and. abs(z-Zc).gt.eps) THEN
+            IF (abs(r-Rc).gt.eps .or. abs(z-Zc).gt.eps) THEN
                m = 4.0d00*r*Rc/((r+Rc)*(r+Rc) + (z-Zc)*(z-Zc))
                CALL CElliptic(m,K,E)
                tmp = omega*mu0*Icoil*sqrt(Rc/r)*((1.0d00-m*0.5d00)*K-E)/(pi*sqrt(m))

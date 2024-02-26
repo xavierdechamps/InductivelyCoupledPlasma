@@ -14,6 +14,7 @@
          if (front(i,3).eq.CLTable(1,1)) then ! far field dEdn imposed
            call setBCfarfield(i)
            
+!         if (front(i,3).eq.CLTable(1,2) .or. front(i,3).eq.CLTable(1,1)) then ! E=0 on all boundary edges
          else if (front(i,3).eq.CLTable(1,2)) then ! edge on axis
           ! First node of the edge element
            inode = front(i,1)
