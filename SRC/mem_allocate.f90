@@ -7,7 +7,7 @@ SUBROUTINE mem_allocate()
     IMPLICIT NONE
     
     WRITE(*,*) "Allocating the memory..."
-    
+        
     ! Requested in read_gmsh
     ALLOCATE(node(1:nbrNodes,1:2))
     ALLOCATE(front(1:nbrFront,1:4))
@@ -16,7 +16,7 @@ SUBROUTINE mem_allocate()
     ALLOCATE(U0(1:nbvar*nbrElem))
     ALLOCATE(Ecoils(1:nbrNodes))
     
-    ALLOCATE(BoundCond(1:nbrFront,1:3))
+    ! ALLOCATE(BoundCond(1:nbrFront,1:3))
     
     ! Solution and CSR format data
     ALLOCATE (rhs(1:nbvar*nbrNodes))
@@ -45,7 +45,8 @@ SUBROUTINE mem_deallocate()
     IF (ALLOCATED(U0))    DEALLOCATE(U0)
     IF (ALLOCATED(Ecoils))    DEALLOCATE(Ecoils)
     
-    IF (ALLOCATED(BoundCond)) DEALLOCATE(BoundCond)
+    ! IF (ALLOCATED(BoundCond)) DEALLOCATE(BoundCond)
+    IF (ALLOCATED(coils)) DEALLOCATE(coils)
     
     IF (ALLOCATED(stencil)) DEALLOCATE(stencil)
     IF (ALLOCATED(rhs)) DEALLOCATE(rhs)

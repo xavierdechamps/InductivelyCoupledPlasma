@@ -5,32 +5,34 @@ PROGRAM main
 
     ! Local parameters
     INTEGER(ki) :: ok,ierr
+    CHARACTER(LEN=100)::param_file
         
     IF(COMMAND_ARGUMENT_COUNT().NE.1)THEN
         WRITE(*,*) "Incorrect number of arguments. Please launch the program as"
         WRITE(*,*) "icp name_of_parameter_file"
         GOTO 200
     ENDIF 
-    CALL get_command_argument(1,mesh_file)
+    CALL get_command_argument(1,param_file)
+        
+    ! Get the flow parameters
+    CALL read_parameters(param_file,ok)
+    IF (ok == 0) THEN
+      WRITE(*,*) "Problem reading the parameters"
+      GOTO 200
+    ENDIF
     
     call mpi_init(ierr)
     call mpi_comm_rank(mpi_comm_world,irank,ierr)
     call mpi_comm_size(mpi_comm_world,nproc,ierr)
 
     ! ------- Données du problème ----------
-    ! mesh_file     = "StructRafVertHor_fine.msh"
-    file_gmsh    = "essai.msh"
-    file_dat     = "essai.dat"
-    
-    Icoil = 1.0d00
-!    sigma = 100.d00
-    omega = 2.d00 * pi * 27.6e6
+    omega = 2.d00 * pi * frequency
     mu0   = 4e-7*pi
     eps   = 1.E-12
-    
-    coils(1,1:2) = (/0.04d00  , 0.019d00/)
-    coils(2,1:2) = (/0.053d00 , 0.019d00/)
-    coils(3,1:2) = (/0.066d00 , 0.019d00/)
+        
+    ! coils(1,1:2) = (/0.04d00  , 0.019d00/)
+    ! coils(2,1:2) = (/0.053d00 , 0.019d00/)
+    ! coils(3,1:2) = (/0.066d00 , 0.019d00/)
     
     ! coils(4,1:2) = (/0.027d00  , 0.019d00/)
     ! coils(5,1:2) = (/0.079d00  , 0.019d00/)
@@ -61,15 +63,13 @@ PROGRAM main
     ! endif
     
     ! Allocate the memory for the arrays
-    CALL mem_allocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond,&
-&                     rhs,stencil,stiffness,ia,ja,mat,&
-&                     nbrNodes,nbrElem,nbrFront,0)
+    CALL mem_allocate()
     
     CALL init()
     
     ! Read the mesh and the initial solution / boundary conditions
-    CALL read_gmsh(U0,nbvar*nbrElem,mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
-&                  BoundCond,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,0,ok)
+    CALL read_gmsh(mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
+&                  nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,0,ok)
     IF (ok == 0) THEN
       WRITE(*,*) "The program hasn't started because of a problem during the reading of the mesh"
       GOTO 200
@@ -97,8 +97,7 @@ PROGRAM main
     if (irank.eq.0) write(*,*) "End of the simulation"
     
     ! Deallocate the memory for the arrays
-    CALL mem_deallocate(node,front,elem,nbr_nodes_per_elem,U0,BoundCond,&
-&                       rhs,stencil,stiffness,ia,ja,mat)
+    CALL mem_deallocate()
     ! call deallocate_end
     call mpi_finalize( ierr )
 

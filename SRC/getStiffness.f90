@@ -4,44 +4,44 @@
       use module_icp
       implicit none
 
-      integer(ki) :: i,idof,inode
-            
+      integer(ki) :: i,idof,inode,icount
+      
+      icount = 0
+      ! Impose Eind     = 0 on axis
+      !      dEind / dn = 0 on far field (nothing special to do)
       do i=1,nbrFront
-       ! on circle or on axis
-         if (front(i,3).eq.1 .or. front(i,3).eq.2) then
+            
+         ! if (front(i,3).eq.1 .or. front(i,3).eq.2) then
+         if (front(i,3).eq.CLTable(1,2)) then ! edge on axis
           ! First node of the edge element
            inode = front(i,1)
            ! real part
            idof = ( inode - 1 )*nbvar+1
            call setdiag_csr(idof)
-           rhs(idof) = 0.0d00
+           rhs(idof) = zero
            
            ! imaginary part
            idof = idof+1
            call setdiag_csr(idof)
-           rhs(idof) = 0.0d00
+           rhs(idof) = zero
            
            ! Second node of the edge element
            inode = front(i,2)
            ! real part
            idof = ( inode - 1 )*nbvar+1
            call setdiag_csr(idof)
-           rhs(idof) = 0.0d00
+           rhs(idof) = zero
            
            ! imaginary part
            idof = idof+1
            call setdiag_csr(idof)
-           rhs(idof) = 0.0d00
+           rhs(idof) = zero
            
+           icount = icount + 2
          endif
          
       end do
-      
-      ! write(*,*) "---------------------- MAT after BC"
-      ! write(*,*) mat(1:ia(nbrNodes*nbvar+1)-1)
-      ! write(*,*) "---------------------- RHS after BC"
-      ! write(*,*) rhs(:)
-
+            
 !-----------------------------------------------------------------------
       end subroutine setBC
 !-----------------------------------------------------------------------
@@ -56,33 +56,18 @@
       integer(ki) :: k,l,i,j,inod,jnod,m,n
       real(kr)    :: stiffmat(1:nbvar*nodelm,1:nbvar*nodelm)
       real(kr)    :: matK5   (1:nbvar*nodelm,1:nbvar*nodelm)
-      
-      ! write(*,*) "---------------------- IA "
-      ! write(*,*) ia(1:nbrNodes*nbvar+1)
-      ! write(*,*) "---------------------- JA "
-      ! write(*,*) ja(1:ia(nbrNodes*nbvar+1))
-      ! write(*,*) "----------------------"
-      
-      ! write(*,*) elem(1,1:3)
-      ! write(*,*) elem(2,1:3)
-      
+            
       call getEcoils()
-      
+          
       do k=1,nbrElem
          call getStiffLoc(k,stiffmat,matK5)
-         
-         ! write(*,*) "stiffmat for elem ",k
-         ! write(*,*) stiffmat
-         
+                  
          do i=1,nodelm
             inod = elem(k,i)
             do j=1,nodelm
                jnod = elem(k,j)
                do m=1,nbvar
-                  do n=1,nbvar
-                  
-                  ! write(*,'(7I3)')k,i,j,m,n,inod,jnod
-                  
+                  do n=1,nbvar                  
                      call addvalue_csr(inod,jnod,m,n,stiffmat((i-1)*nbvar+m,(j-1)*nbvar+n))
                   enddo
                enddo
@@ -97,18 +82,6 @@
             
          end do
       end do
-      
-      
-      ! write(*,*) "---------------------- IA "
-      ! write(*,*) ia(1:nbrNodes*nbvar+1)
-      ! write(*,*) "---------------------- JA "
-      ! write(*,*) ja(1:ia(nbrNodes*nbvar+1)-1)
-      ! write(*,*) "---------------------- MAT"
-      ! write(*,*) mat(1:ia(nbrNodes*nbvar+1)-1)
-      ! write(*,*) "---------------------- RHS"
-      ! write(*,*) rhs(:)
-      
-      
       
 !-----------------------------------------------------------------------
       end subroutine getStiffness
@@ -125,7 +98,7 @@
       real(kr)    :: xa,xb,xc,ya,yb,yc,surf,tau,ri,rj
       real(kr)    :: n1r,n2r,n3r,n1z,n2z,n3z,r123,det,h,ksi
       real(kr)    :: nr(3),nz(3),na(3),nb(3),nc(3),nd(3)
-      real(kr)    :: a,b,c,d,r1,r2,r3
+      real(kr)    :: a,b,c,d,r1,r2,r3,sigmaloc
       real(kr)    :: matK1(1:nodelm*nbvar,1:nodelm*nbvar)
       real(kr)    :: matK3(1:nodelm*nbvar,1:nodelm*nbvar)
       real(kr)    :: matK4(1:nodelm*nbvar,1:nodelm*nbvar)
@@ -141,7 +114,7 @@
       delta = zero
       
       CALL isPlasma(ielm,plasma)
-      CALL getSigma(sigma,plasma)
+      CALL getSigma(sigmaloc,plasma)
       
       r1 = node(elem(ielm,1),2)
       r2 = node(elem(ielm,2),2)
@@ -193,7 +166,7 @@
       matK1 = - matK1 * r123 / (12.0d00 * surf)
       matK3 = - matK3 * r123 / (12.0d00 * surf)
       matK4 = - matK4 * abs(det)
-      matK5 = - matK5 * omega * mu0 * sigma * surf / 60.0d00
+      matK5 = - matK5 * omega * mu0 * sigmaloc * surf / 60.0d00
       
       ! write(*,*) "k1+k3"
       ! write(*,*) matk1+matk3
@@ -223,14 +196,15 @@
 !-----------------------------------------------------------------------
       subroutine getSigma(sig,plasma)
 !-----------------------------------------------------------------------
-      use module_icp
+      use module_icp, only :kr,ki,sigma,zero
       implicit none
       
       real(kr) :: sig
       integer(ki) :: plasma
       
       sig = zero
-      if (plasma.eq.1) sig = 1000.d00 
+            
+      if (plasma.eq.1) sig = sigma
 
 !-----------------------------------------------------------------------
       end subroutine getSigma
