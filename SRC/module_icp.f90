@@ -23,7 +23,7 @@
       INTEGER(ki) :: irank,nproc
       
       REAL(kr)    :: sigma,mu0,omega,Icoil
-      REAL(kr)    :: coils(9,2)
+      REAL(kr)    :: coils(3,2)
       
       INTEGER(ki), PARAMETER :: length_names = 50
       CHARACTER(LEN=length_names) :: mesh_file, file_gmsh, file_dat

@@ -230,7 +230,7 @@
       integer(ki) :: plasma
       
       sig = zero
-      if (plasma.eq.1) sig = 10000.d00 
+      if (plasma.eq.1) sig = 1000.d00 
 
 !-----------------------------------------------------------------------
       end subroutine getSigma
