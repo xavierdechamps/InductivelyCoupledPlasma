@@ -316,7 +316,7 @@ END SUBROUTINE write_gmsh
 !##########################################################
 SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
 &                    nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,skip_data,ok)
-    USE module_icp, only : kr,ki,nbvar,time_begin, time_end
+    USE module_icp, only : kr,ki,nbvar,time_begin, time_end,sigma_in
     IMPLICIT NONE
 
     ! Subroutine parameters
@@ -500,6 +500,37 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     
     IF (skip_data.EQ.1) GOTO 100
     
+    dataname = "Sigma"
+    DO WHILE (line .NE. "$ElementData")
+      READ(10,*,END=90) line
+    END DO
+    DO i=1,2
+      READ(10,*,END=90) line
+    ENDDO
+!    IF (TRIM(line) .NE. '"Sigma"') GO TO 90
+    DO i=1,5
+      READ(10,*,END=90) line
+    ENDDO
+    READ(10,*,END=90) a
+    IF (a.ne.nbrElem) THEN
+      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      WRITE(*,*) "Error reading the initial height."
+      WRITE(*,*) "The number of elements with initial height is",a
+      WRITE(*,*) "The number of 2D elements in the mesh is",nbrElem
+      WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      ok = 0
+      GOTO 100
+    ENDIF
+    READ(10,*,END=90) (a,sigma_in(i),i=1,nbrElem)
+    GOTO 100
+    
+ 90 ok = 0
+    WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    WRITE(*,*) "Error reading the following data: ", TRIM(dataname)
+    WRITE(*,*) "Read the following data in the file: ", TRIM(line)
+    WRITE(*,*) "Check that the name of the mesh file points to the correct file"
+    WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    
 100 CALL sampletime(time_end)
     CALL time_display
     WRITE(*,*) "-------------------------------------------------------"
@@ -515,16 +546,13 @@ END SUBROUTINE read_gmsh
 ! SUBROUTINE write_gmsh_initial_solution
 !  Goal: write the initial solution in the Gmsh .msh format
 !##########################################################
-SUBROUTINE write_gmsh_initial_solution(height_init, velocity_init, depth_init, &
-&                                      height_BC, velocity_BC)
+SUBROUTINE write_gmsh_initial_solution(sigma_init)
     USE module_icp
     IMPLICIT NONE
     
     ! Subroutine parameters
     ! INTEGER(ki), INTENT(IN)  :: 
-    REAL(kr), INTENT(IN) :: height_init(nbrElem),depth_init(nbrElem)
-    REAL(kr), INTENT(IN) :: velocity_init(nbrElem,2)
-    REAL(kr), INTENT(IN) :: height_BC(nbrFront),velocity_BC(nbrFront,2)
+    REAL(kr), INTENT(IN) :: sigma_init(nbrElem)
     
     ! Local parameters
     INTEGER(ki) :: ierr, i, numdigits
@@ -557,72 +585,19 @@ SUBROUTINE write_gmsh_initial_solution(height_init, velocity_init, depth_init, &
     ENDDO    
     WRITE(10,'(T1,A12)') "$EndElements"
     
-    !************************************* INITIAL HEIGHT
+    !************************************* ELECTRICAL CONDUCTIVITY
     WRITE(10,'(T1,A12)') "$ElementData"
     WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,A9)') '"Height"'
+    WRITE(10,'(T1,A7)') '"Sigma"'
     WRITE(10,'(T1,I1)') 1
     WRITE(10,'(T1,I1)') 0
     WRITE(10,'(T1,I1)') 3
     WRITE(10,'(T1,I1)') 0
     WRITE(10,'(T1,I1)') 1
     WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, height_init(i),i=1,nbrElem)
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, sigma_init(i),i=1,nbrElem)
     WRITE(10,'(T1,A15)') "$EndElementData"
     
-    !************************************* INITIAL VELOCITY
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,A10)') '"Velocity"'
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//',2'//formatreal//',I2)') (i+nbrFront, velocity_init(i,1), velocity_init(i,2),0,i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !************************************* Bathymetric depth
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,A9)') '"Depth"'
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, depth_init(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !************************************* Boundary Condition - Height 
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,A17)') '"Height_boundary"'
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,'//numdig//')') nbrFront
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, height_BC(i),i=1,nbrFront)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !************************************* Boundary Condition - Velocity 
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,A19)') '"Velocity_boundary"'
-    WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,I1)') 0
-    WRITE(10,'(T1,I1)') 3
-    WRITE(10,'(T1,'//numdig//')') nbrFront
-    WRITE(10,'(T1,'//numdig//',2'//formatreal//',I2)') (i, velocity_BC(i,1), velocity_BC(i,2),0,i=1,nbrFront)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !*************************************
     CLOSE(UNIT=10)
     
 END SUBROUTINE write_gmsh_initial_solution

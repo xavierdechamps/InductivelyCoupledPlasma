@@ -13,7 +13,7 @@
       
       REAL(kr), ALLOCATABLE :: node(:,:)
       REAL(kr), ALLOCATABLE :: nodeglob(:,:)
-      REAL(kr), ALLOCATABLE :: U0(:),rhs(:),mat(:),Ecoils(:)
+      REAL(kr), ALLOCATABLE :: U0(:),rhs(:),mat(:),Ecoils(:),sigma_in(:)
       ! REAL(kr), ALLOCATABLE :: BoundCond(:,:)   ! Imposed boundary conditions
       INTEGER(ki), ALLOCATABLE :: nbr_nodes_per_elem(:) ! see read_gmsh
       INTEGER(ki), ALLOCATABLE :: frontglob(:,:),elemglob(:,:)

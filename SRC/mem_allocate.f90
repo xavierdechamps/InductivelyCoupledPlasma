@@ -15,6 +15,7 @@ SUBROUTINE mem_allocate()
     ALLOCATE(nbr_nodes_per_elem(1:nbrElem))
     ALLOCATE(U0(1:nbvar*nbrElem))
     ALLOCATE(Ecoils(1:nbrNodes))
+    ALLOCATE(sigma_in(1:nbrElem))
     
     ! ALLOCATE(BoundCond(1:nbrFront,1:3))
     
@@ -44,6 +45,7 @@ SUBROUTINE mem_deallocate()
     IF (ALLOCATED(nbr_nodes_per_elem))  DEALLOCATE(nbr_nodes_per_elem)
     IF (ALLOCATED(U0))    DEALLOCATE(U0)
     IF (ALLOCATED(Ecoils))    DEALLOCATE(Ecoils)
+    IF (ALLOCATED(sigma_in))    DEALLOCATE(sigma_in)
     
     ! IF (ALLOCATED(BoundCond)) DEALLOCATE(BoundCond)
     IF (ALLOCATED(coils)) DEALLOCATE(coils)

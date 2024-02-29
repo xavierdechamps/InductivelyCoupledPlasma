@@ -29,45 +29,21 @@ PROGRAM main
     omega = 2.d00 * pi * frequency
     mu0   = 4e-7*pi
     eps   = 1.E-12
-        
-    ! coils(1,1:2) = (/0.04d00  , 0.019d00/)
-    ! coils(2,1:2) = (/0.053d00 , 0.019d00/)
-    ! coils(3,1:2) = (/0.066d00 , 0.019d00/)
-    
-    ! coils(4,1:2) = (/0.027d00  , 0.019d00/)
-    ! coils(5,1:2) = (/0.079d00  , 0.019d00/)
-    
-    ! coils(6,1:2) = (/0.014d00  , 0.019d00/)
-    ! coils(7,1:2) = (/0.092d00  , 0.019d00/)
-    
-    ! coils(8,1:2) = (/0.001d00  , 0.019d00/)
-    ! coils(9,1:2) = (/0.105d00  , 0.019d00/)
-    
-    ! coils(10,1:2) = (/0.0075d00  , 0.023d00/)
-    ! coils(11,1:2) = (/0.0205d00  , 0.023d00/)
-    ! coils(12,1:2) = (/0.0335d00  , 0.023d00/)
-    ! coils(13,1:2) = (/0.0465d00  , 0.023d00/)
-    ! coils(14,1:2) = (/0.0595d00  , 0.023d00/)
-    ! coils(15,1:2) = (/0.0725d00  , 0.023d00/)
-    ! coils(16,1:2) = (/0.0855d00  , 0.023d00/)
-    ! coils(17,1:2) = (/0.0985d00  , 0.023d00/)
     
     ok = 1
     ! --------------------------------------
-    ! if (irank.eq.0) then
-       CALL browse_gmsh(mesh_file,length_names,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,ok)
-       IF (ok == 0) THEN
-          WRITE(*,*) "The program hasn't started because of a problem during the browsing of the mesh"
-          GOTO 200
-       ENDIF
-    ! endif
+    CALL browse_gmsh(mesh_file,length_names,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,ok)
+    IF (ok == 0) THEN
+       WRITE(*,*) "The program hasn't started because of a problem during the browsing of the mesh"
+       GOTO 200
+    ENDIF
     
     ! Allocate the memory for the arrays
     CALL mem_allocate()
     
     CALL init()
     
-    ! Read the mesh and the initial solution / boundary conditions
+    ! Read the mesh and the value of sigma in the torch
     CALL read_gmsh(mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
 &                  nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,0,ok)
     IF (ok == 0) THEN
@@ -75,24 +51,19 @@ PROGRAM main
       GOTO 200
     ENDIF
     
-    ! CALL partitioner()
-    if (irank.eq.0) write(*,*) "Constructing the CSR structure"
+    write(*,*) "Building the CSR structure"
     call createcsr(stencil,elem(:,1:3),stiffness,ia,ja,nbrnodes,nbrelem,numnz) 
     
-    if (irank.eq.0) write(*,*) "Constructing the stiffness matrix"
+    write(*,*) "Building the stiffness matrix"
     call getStiffness()
 
-   ! if (irank.eq.0) write(*,*) "Imposing the boundary conditions"
+   write(*,*) "Imposing the boundary conditions"
    call setBC()
 
    CALL solve(ok)
-      ! call resolution(ok)
    
-   CALL write_gmsh(ok)
+   if (ok.eq.1) CALL write_gmsh(ok)
    
-   ! if (ok.eq.1 .and. irank.eq.0) call ecriture_gmsh
-   
-
 200 continue
     if (irank.eq.0) write(*,*) "End of the simulation"
     
@@ -107,38 +78,36 @@ end program
 ! *******************************************************************
 subroutine sampletime(counter)
   use module_icp, only : kr,ki
-      implicit none
+  implicit none
       
-      ! variables passed through header
-      integer(ki) ::counter
-      
-      ! variables declared locally
-      integer(ki) ::rate, contmax
- 
-      ! Determine CPU time
-      call system_clock(counter, rate, contmax )
+  ! variables passed through header
+  integer(ki) ::counter
+  
+  ! variables declared locally
+  integer(ki) ::rate, contmax
+  
+  ! Determine CPU time
+  call system_clock(counter, rate, contmax )
 !-----------------------------------------------------------------------
       end subroutine sampletime
 !-----------------------------------------------------------------------
 
 ! *******************************************************************
 SUBROUTINE time_display
-use module_icp
-implicit none
+  use module_icp
+  implicit none
 
-real(kr) :: time
-integer(ki) :: job, cont3
-integer(ki) :: rate, contmax, itime
+  real(kr) :: time
+  integer(ki) :: job, cont3
+  integer(ki) :: rate, contmax, itime
 
-call system_clock(cont3, rate, contmax )
-if (time2 .ge. time1) then
-   itime=time2-time1
-else
-   itime=(contmax - time1) + (time2 + 1)
-endif
-
-time = dfloat(itime) / dfloat(rate)
-
-if (irank==0) write(*,'(a,f10.4)') "        Time needed (s) :     ",time
+  call system_clock(cont3, rate, contmax )
+  if (time2 .ge. time1) then
+    itime=time2-time1
+  else
+    itime=(contmax - time1) + (time2 + 1)
+  endif
+  time = dfloat(itime) / dfloat(rate)
+  write(*,'(a,f10.4)') "        Time needed (s) :     ",time
 
 end subroutine time_display

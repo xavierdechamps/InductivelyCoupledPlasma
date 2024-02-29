@@ -64,8 +64,9 @@
       matK5 = zero
       delta = zero
       
-      CALL isPlasma(ielm,plasma)
-      CALL getSigma(sigmaloc,plasma)
+      ! CALL isPlasma(ielm,plasma)
+      ! CALL getSigma(sigmaloc,plasma)
+      sigmaloc = sigma_in(ielm)
       
       r1 = node(elem(ielm,1),2)
       r2 = node(elem(ielm,2),2)
