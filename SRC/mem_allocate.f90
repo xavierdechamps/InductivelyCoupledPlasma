@@ -15,7 +15,7 @@ SUBROUTINE mem_allocate()
     ALLOCATE(nbr_nodes_per_elem(1:nbrElem))
     ALLOCATE(U0(1:nbvar*nbrElem))
     ALLOCATE(Ecoils(1:nbrNodes))
-    ALLOCATE(sigma_in(1:nbrElem))
+    ALLOCATE(sigma_in(1:nbrNodes))
     
     ! ALLOCATE(BoundCond(1:nbrFront,1:3))
     

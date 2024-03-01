@@ -94,7 +94,6 @@ SUBROUTINE write_gmsh()
     CHARACTER(LEN=9) :: formatreal
     REAL(kr)         :: tmp1,n1r,n2r,n3r,n1z,n2z,n3z,det,r123
     REAL(kr)         :: Brr(nbrElem),Bri(nbrElem),Bzr(nbrElem),Bzi(nbrElem)
-    REAL(kr)         :: Eelem(2*nbrElem)
     
     fin = 0
     formatreal = 'ES24.15E3'
@@ -145,10 +144,7 @@ SUBROUTINE write_gmsh()
      &              n2r*U0(2*elem(i,2)-1) + &
      &              n3r*U0(2*elem(i,3)-1) ) / det
            Bzi(i) = ( tmp1 + ( U0(2*elem(i,1)-1) + U0(2*elem(i,2)-1) + U0(2*elem(i,3)-1) )/(3.0d00*r123) ) / omega 
-           
-           Eelem(2*i-1) = ( U0(2*elem(i,1)-1) + U0(2*elem(i,2)-1) + U0(2*elem(i,3)-1) )/3.0d00
-           Eelem(2*i  ) = ( U0(2*elem(i,1)  ) + U0(2*elem(i,2)  ) + U0(2*elem(i,3)  ) )/3.0d00
-           
+                      
          ELSE IF (nbr_nodes_per_elem(i) .EQ. 4) THEN 
            write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,4'//numdig//')') i+nbrFront,3,2,elem(i,5),1,elem(i,1:4)
          END IF 
@@ -241,7 +237,7 @@ SUBROUTINE write_gmsh()
     
     !*************************************
     ! Write the Joule heating
-    WRITE(10,'(T1,A12)') "$ElementData"
+    WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,A16)') '"Joule heating"'
     WRITE(10,'(T1,A1)') "1"
@@ -249,9 +245,9 @@ SUBROUTINE write_gmsh()
     WRITE(10,'(T1,A1)') "3"
     WRITE(10,'(T1,'//numdig//')') 0
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, 0.5d00*sigma_in(i)*(Eelem(2*i-1)**2+Eelem(2*i)**2),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 0.5d00*sigma_in(i)*(U0(2*i-1)**2+U0(2*i)**2),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the magnetic field, radial component, real part
@@ -505,7 +501,7 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     IF (skip_data.EQ.1) GOTO 100
     
     dataname = "Sigma"
-    DO WHILE (line .NE. "$ElementData")
+    DO WHILE (line .NE. "$NodeData")
       READ(10,*,END=90) line
     END DO
     DO i=1,2
@@ -515,8 +511,8 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     DO i=1,5
       READ(10,*,END=90) line
     ENDDO
-    READ(10,*,END=90) a
-    IF (a.ne.nbrElem) THEN
+    READ(10,*,END=90) a    
+    IF (a.ne.nbrNodes) THEN
       WRITE(*,*) "    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
       WRITE(*,*) "Error reading the initial height."
       WRITE(*,*) "The number of elements with initial height is",a
@@ -525,7 +521,7 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
       ok = 0
       GOTO 100
     ENDIF
-    READ(10,*,END=90) (a,sigma_in(i),i=1,nbrElem)
+    READ(10,*,END=90) (a,sigma_in(i),i=1,nbrNodes)
     GOTO 100
     
  90 ok = 0
@@ -550,13 +546,9 @@ END SUBROUTINE read_gmsh
 ! SUBROUTINE write_gmsh_initial_solution
 !  Goal: write the initial solution in the Gmsh .msh format
 !##########################################################
-SUBROUTINE write_gmsh_initial_solution(sigma_init)
+SUBROUTINE write_gmsh_initial_solution()
     USE module_icp
     IMPLICIT NONE
-    
-    ! Subroutine parameters
-    ! INTEGER(ki), INTENT(IN)  :: 
-    REAL(kr), INTENT(IN) :: sigma_init(nbrElem)
     
     ! Local parameters
     INTEGER(ki) :: ierr, i, numdigits
@@ -590,7 +582,7 @@ SUBROUTINE write_gmsh_initial_solution(sigma_init)
     WRITE(10,'(T1,A12)') "$EndElements"
     
     !************************************* ELECTRICAL CONDUCTIVITY
-    WRITE(10,'(T1,A12)') "$ElementData"
+    WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,I1)') 1
     WRITE(10,'(T1,A7)') '"Sigma"'
     WRITE(10,'(T1,I1)') 1
@@ -598,9 +590,9 @@ SUBROUTINE write_gmsh_initial_solution(sigma_init)
     WRITE(10,'(T1,I1)') 3
     WRITE(10,'(T1,I1)') 0
     WRITE(10,'(T1,I1)') 1
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, sigma_init(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, sigma_in(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
     
     CLOSE(UNIT=10)
     

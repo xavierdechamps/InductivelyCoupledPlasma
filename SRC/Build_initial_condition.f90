@@ -47,10 +47,10 @@ SUBROUTINE write_initial_condition_gmsh()
     USE module_icp
     IMPLICIT NONE
 
-    INTEGER(ki) :: ierr, ielm, numdigits,k
+    INTEGER(ki) :: ierr, inod, numdigits,k
     CHARACTER(LEN=2) :: numdig
     CHARACTER(LEN=9) :: formatreal
-    REAL(kr) :: sigma_init(nbrElem),z,r,z1,z2,r1,r2,rad,rad2
+    REAL(kr) :: z,r,z1,z2,r1,r2,rad,rad2
     REAL(kr) :: z3,r3,z4,r4,slope
     LOGICAL  :: cond1,cond2,cond3,cond4,cond5,cond6
     
@@ -60,19 +60,13 @@ SUBROUTINE write_initial_condition_gmsh()
     formatreal = 'ES24.15E3'
 
     !************************************* SIGMA  
-    sigma_init = zero
-    DO ielm=1,nbrElem
+    sigma_in = zero
+    DO inod=1,nbrNodes
     
-      z=zero
-      r=zero
-      do k=1,nbr_nodes_per_elem(ielm)
-        z=z+node(elem(ielm,k),1)
-        r=r+node(elem(ielm,k),2)
-      enddo
-      z = z/nbr_nodes_per_elem(ielm)
-      r = r/nbr_nodes_per_elem(ielm)
+      z=node(inod,1)
+      r=node(inod,2)
     
-      IF (elem(ielm,5).eq.2) THEN ! Inside the torch
+      ! IF (elem(ielm,5).eq.2) THEN ! Inside the torch
         
       ! First zone sigma = 49
         z1 = 0.056; r1 = zero; z2 = 0.0526; r2 = 0.0037;
@@ -93,7 +87,7 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.0526; r1 = 0.0037; z2 = 0.0517; r2 = 0.0045;
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond6= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 .and. cond6) sigma_init(ielm) = 49.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 .and. cond6) sigma_in(inod) = 49.d00
         
       ! Second zone sigma = 932
         z1 = 0.0566; r1 = zero; z2 = 0.0533; r2 = 0.0054;
@@ -111,7 +105,7 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.1182; r1 = 0.019; z2 = 0.2; r2 = 0.0115
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond5= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_init(ielm) = 932.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_in(inod) = 932.d00
         
       ! Third zone sigma = 1836
         z1 = 0.057; r1 = zero; z2 = 0.0564; r2 = 0.004;
@@ -129,7 +123,7 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.12; r1 = 0.0175; z2 = 0.2; r2 = 0.0
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond5= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_init(ielm) = 1836.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_in(inod) = 1836.d00
         
       ! Fourth zone sigma = 2358
         z1 = 0.0592; r1 = zero; z2 = 0.0576; r2 = 0.0087;
@@ -144,7 +138,7 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.1186; r1 = 0.0163; z2 = 0.169; r2 = 0.0
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond4= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 ) sigma_init(ielm) = 2358.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 ) sigma_in(inod) = 2358.d00
         
       ! Fifth zone sigma = 2570
         z1 = 0.0679; r1 = 0.002; z2 = 0.0611; r2 = 0.0083;
@@ -162,7 +156,7 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.1355; r1 = 0.0055; z2 = 0.0679; r2 = 0.002
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond5= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_init(ielm) = 2570.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 .and. cond5 ) sigma_in(inod) = 2570.d00
         
       ! Sixth zone sigma = 2679
         z1 = 0.0695; r1 = 0.0071; z2 = 0.0855; r2 = 0.0133;
@@ -177,18 +171,18 @@ SUBROUTINE write_initial_condition_gmsh()
         z1 = 0.125; r1 = 0.0089; z2 = 0.0695; r2 = 0.0071
         r3 = (z2-z1)*(r-r1) - (r2-r1)*(z-z1)
         cond4= r3.le.zero
-        if (cond1 .and. cond2 .and. cond3 .and. cond4 ) sigma_init(ielm) = 2679.d00
+        if (cond1 .and. cond2 .and. cond3 .and. cond4 ) sigma_in(inod) = 2679.d00
         
       ! Seventh zone sigma = 2756
         z1 = 0.0875; r1 = 0.0107; z2 = 0.0875; r2 = 0.0125
         rad = sqrt((z2-z1)**2+(r2-r1)**2)
         rad2 = sqrt((z-z1)**2+(r-r1)**2)
-        if (rad2.le.rad) sigma_init(ielm) = 2756.d00
+        if (rad2.le.rad) sigma_in(inod) = 2756.d00
         
-      ENDIF
+      ! ENDIF
     ENDDO
     
-    CALL write_gmsh_initial_solution(sigma_init)
+    CALL write_gmsh_initial_solution(sigma_in)
 
 END SUBROUTINE write_initial_condition_gmsh
 

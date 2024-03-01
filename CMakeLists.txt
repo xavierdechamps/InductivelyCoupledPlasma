@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.15)
 set ( CMAKE_Fortran_COMPILER      "ifort" )
 
 # Declaration du projet ####################################################
+# KEEP C language as it is necessary for find_package(BLAS) to actually find MKL BLAS
 project(MyProject
-LANGUAGES Fortran
+LANGUAGES Fortran C
 VERSION 1.0
 DESCRIPTION "Finite element solver for the 2D electric field induction equation")
 

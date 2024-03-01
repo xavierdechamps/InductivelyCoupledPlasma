@@ -64,7 +64,7 @@
       matK5 = zero
       delta = zero
       
-      sigmaloc = sigma_in(ielm)
+      ! sigmaloc = sigma_in(ielm)
       
       r1 = node(elem(ielm,1),2)
       r2 = node(elem(ielm,2),2)
@@ -96,6 +96,7 @@
       DO ii=1,3
         delta(ii,ii) = 1.0d00
         ri = node(elem(ielm,ii),2)
+        sigmaloc = sigma_in(elem(ielm,ii))
         DO jj=1,3
           rj = node(elem(ielm,jj),2)
           
@@ -109,14 +110,15 @@
      &                           c*nc(ii)*nc(jj)+d*nd(ii)*nd(jj)
           matK4(2*ii  ,2*jj  ) = matK4(2*ii-1,2*jj-1)
           
-          matK5(2*ii  ,2*jj-1) = (r123 + ri + rj)*(1.0d00 + delta(ii,jj))
+          matK5(2*ii  ,2*jj-1) = (r123 + ri + rj)*(1.0d00 + delta(ii,jj))*sigmaloc
           matK5(2*ii-1,2*jj  ) = - matK5(2*ii  ,2*jj-1)
         ENDDO 
       ENDDO
       matK1 = - matK1 * r123 / (12.0d00 * surf)
       matK3 = - matK3 * r123 / (12.0d00 * surf)
       matK4 = - matK4 * abs(det)
-      matK5 = - matK5 * omega * mu0 * sigmaloc * surf / 60.0d00
+      matK5 = - matK5 * omega * mu0 * surf / 60.0d00
+      ! matK5 = - matK5 * omega * mu0 * sigmaloc * surf / 60.0d00
             
       stiff = matK1 + matK3 + matK4 + matK5
 
