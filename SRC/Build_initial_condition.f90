@@ -8,20 +8,12 @@ PROGRAM BUILD_INITIAL_SOLUTION
     ! Get the number of arguments
     IF(COMMAND_ARGUMENT_COUNT().NE.2)THEN
       WRITE(*,*) "Incorrect number of arguments. Please launch the program as"
-      WRITE(*,*) "build_initial_condition   parameter_file   initial_condition_file.msh"
+      WRITE(*,*) "build_initial_condition   mesh_file.msh   initial_condition_file.msh"
       GOTO 200
     ENDIF 
-    CALL get_command_argument(1,param_file)
+    CALL get_command_argument(1,mesh_file)
     CALL get_command_argument(2,file_gmsh)
-    
-    ! ------- Parameters ----------
-    CALL read_parameters(param_file,ok)
-    IF (ok == 0) THEN
-      WRITE(*,*) "Problem reading the parameters"
-      GOTO 200
-    ENDIF
-!    CALL get_command_argument(2,file_gmsh)
-    
+        
     ! Browse the mesh to get the size of the arrays
     CALL browse_gmsh(mesh_file,length_names,nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,ok)
     IF (ok == 0) THEN

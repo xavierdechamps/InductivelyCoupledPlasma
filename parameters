@@ -1,12 +1,10 @@
-Mesh_rectangle_0.100_sig100_init.msh                                   : name of mesh file
+Mesh_rectangle_0.100_sig100_init.msh    : name of mesh file
+Mesh_rectangle_0.100_sig100_sol.msh     : name of the output, gmsh format
 3                             : number of boundary types, the next 3 lines
 1                             : Far field, physical tag in gmsh
 2                             : Axis, physical tag in gmsh
 3                             : Torch, physical tag in gmsh
-Mesh_rectangle_0.100_sig100_sol.msh                               : name of the output, gmsh format
-Mesh_coarse_sol.dat                               : name of the output, dat format
-49.0                           : Icoil, intensity of the electric current in the coil
-100.0                        : sigma, electric conductivity of the plasma
+49.0                          : Icoil, intensity of the electric current in the coil
 27000000.0                    : excitation frequency [Herz] of the coil
 3                             : number of coils
 0.04           0.019          : axial and radial coordinates of each coil

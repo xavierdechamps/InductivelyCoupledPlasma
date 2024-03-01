@@ -94,6 +94,7 @@ SUBROUTINE write_gmsh()
     CHARACTER(LEN=9) :: formatreal
     REAL(kr)         :: tmp1,n1r,n2r,n3r,n1z,n2z,n3z,det,r123
     REAL(kr)         :: Brr(nbrElem),Bri(nbrElem),Bzr(nbrElem),Bzi(nbrElem)
+    REAL(kr)         :: Eelem(2*nbrElem)
     
     fin = 0
     formatreal = 'ES24.15E3'
@@ -145,6 +146,8 @@ SUBROUTINE write_gmsh()
      &              n3r*U0(2*elem(i,3)-1) ) / det
            Bzi(i) = ( tmp1 + ( U0(2*elem(i,1)-1) + U0(2*elem(i,2)-1) + U0(2*elem(i,3)-1) )/(3.0d00*r123) ) / omega 
            
+           Eelem(2*i-1) = ( U0(2*elem(i,1)-1) + U0(2*elem(i,2)-1) + U0(2*elem(i,3)-1) )/3.0d00
+           Eelem(2*i  ) = ( U0(2*elem(i,1)  ) + U0(2*elem(i,2)  ) + U0(2*elem(i,3)  ) )/3.0d00
            
          ELSE IF (nbr_nodes_per_elem(i) .EQ. 4) THEN 
            write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,4'//numdig//')') i+nbrFront,3,2,elem(i,5),1,elem(i,1:4)
@@ -238,7 +241,7 @@ SUBROUTINE write_gmsh()
     
     !*************************************
     ! Write the Joule heating
-    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A12)') "$ElementData"
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,A16)') '"Joule heating"'
     WRITE(10,'(T1,A1)') "1"
@@ -246,9 +249,9 @@ SUBROUTINE write_gmsh()
     WRITE(10,'(T1,A1)') "3"
     WRITE(10,'(T1,'//numdig//')') 0
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 0.5d00*sigma*(U0(2*i-1)**2+U0(2*i)**2),i=1,nbrNodes)
-    WRITE(10,'(T1,A12)') "$EndNodeData"
+    WRITE(10,'(T1,'//numdig//')') nbrElem
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, 0.5d00*sigma_in(i)*(Eelem(2*i-1)**2+Eelem(2*i)**2),i=1,nbrElem)
+    WRITE(10,'(T1,A15)') "$EndElementData"
     
     !*************************************
     ! Write the magnetic field, radial component, real part
@@ -263,6 +266,7 @@ SUBROUTINE write_gmsh()
     WRITE(10,'(T1,'//numdig//')') nbrElem
     WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, Brr(i),i=1,nbrElem)
     WRITE(10,'(T1,A15)') "$EndElementData"
+    
     !*************************************
     ! Write the magnetic field, radial component, imaginary part
     WRITE(10,'(T1,A12)') "$ElementData"

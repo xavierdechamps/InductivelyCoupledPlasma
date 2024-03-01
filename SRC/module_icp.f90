@@ -22,11 +22,11 @@
       ! INTEGER(ki), ALLOCATABLE :: ii(:),jj(:),loc2glob(:)
       INTEGER(ki) :: irank,nproc
       
-      REAL(kr)    :: sigma,mu0,omega,Icoil,frequency
+      REAL(kr)    :: mu0,omega,Icoil,frequency
       REAL(kr), ALLOCATABLE    :: coils(:,:) ! coils(3,2)
       
-      INTEGER(ki), PARAMETER :: length_names = 50
-      CHARACTER(LEN=length_names) :: mesh_file, file_gmsh, file_dat
+      INTEGER(ki), PARAMETER :: length_names = 40
+      CHARACTER(LEN=length_names) :: mesh_file, file_gmsh
       
       INTEGER(ki) :: nbrNodes, nbrElem, nbrTris, nbrQuads, nbrFront
       INTEGER(ki) :: nbrInt, nbrBC,nbrCoils

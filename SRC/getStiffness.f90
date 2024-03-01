@@ -64,8 +64,6 @@
       matK5 = zero
       delta = zero
       
-      ! CALL isPlasma(ielm,plasma)
-      ! CALL getSigma(sigmaloc,plasma)
       sigmaloc = sigma_in(ielm)
       
       r1 = node(elem(ielm,1),2)
@@ -119,45 +117,9 @@
       matK3 = - matK3 * r123 / (12.0d00 * surf)
       matK4 = - matK4 * abs(det)
       matK5 = - matK5 * omega * mu0 * sigmaloc * surf / 60.0d00
-      
-      ! write(*,*) "k1+k3"
-      ! write(*,*) matk1+matk3
-      
+            
       stiff = matK1 + matK3 + matK4 + matK5
 
 !-----------------------------------------------------------------------
       end subroutine getStiffLoc
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-      subroutine isPlasma(ielm,plasma)
-!-----------------------------------------------------------------------
-      use module_icp
-      implicit none
-      
-      integer(ki) :: ielm,plasma
-      
-      plasma = 0
-      if (elem(ielm,5) .eq. 2) plasma = 1
-!-----------------------------------------------------------------------
-      end subroutine isPlasma
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-      subroutine getSigma(sig,plasma)
-!-----------------------------------------------------------------------
-      use module_icp, only :kr,ki,sigma,zero
-      implicit none
-      
-      real(kr) :: sig
-      integer(ki) :: plasma
-      
-      sig = zero
-            
-      if (plasma.eq.1) sig = sigma
-
-!-----------------------------------------------------------------------
-      end subroutine getSigma
 !-----------------------------------------------------------------------

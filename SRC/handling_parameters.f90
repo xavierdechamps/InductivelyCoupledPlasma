@@ -25,7 +25,9 @@ SUBROUTINE read_parameters(file_name,ok)
         RETURN
     ENDIF
     
-    READ(20,iostat=ierr,err=8,fmt='(a50,a100)') mesh_file,tmp
+    READ(20,iostat=ierr,err=8,fmt='(a40,a100)') mesh_file,tmp
+    line = line + 1
+    READ(20,iostat=ierr,err=8,fmt='(a40,a100)') file_gmsh,tmp
     line = line + 1
     READ(20,iostat=ierr,err=8,fmt='(I9,a100)') nbrBC,tmp
     line = line + 1
@@ -39,13 +41,7 @@ SUBROUTINE read_parameters(file_name,ok)
       line = line + 1
       CLTable(2,i) = i-1
     ENDDO
-    READ(20,iostat=ierr,err=8,fmt='(a50,a100)')       file_gmsh,tmp
-    line = line + 1
-    READ(20,iostat=ierr,err=8,fmt='(a50,a100)')       file_dat,tmp
-    line = line + 1
     READ(20,iostat=ierr,err=8,fmt='(ES15.7E3,a100)')  Icoil,tmp
-    line = line + 1
-    READ(20,iostat=ierr,err=8,fmt='(ES15.7E3,a100)')  sigma,tmp
     line = line + 1
     READ(20,iostat=ierr,err=8,fmt='(ES15.7E3,a100)')  frequency,tmp
     line = line + 1
@@ -85,16 +81,14 @@ SUBROUTINE print_correct_parameters()
     
     WRITE(*,*) "The input file must contain the following lines"
     WRITE(*,*) ('*',i=1,79)
-    WRITE(*,'(a12,18x,a)') "CHARACTER*50",": name of mesh file"
+    WRITE(*,'(a12,18x,a)') "CHARACTER*40",": name of mesh file"
+    WRITE(*,'(a12,18x,a)') "CHARACTER*40",": name of the output gmsh file"
     WRITE(*,'(a7,23x,a)')  "INTEGER",": number of boundary types as built in gmsh, see"
     WRITE(*,'(32x,a)')     "the following five physical tags"
     WRITE(*,'(a7,23x,a)')  "INTEGER",": physical tag associated to the Far field"
     WRITE(*,'(a7,23x,a)')  "INTEGER",": [optional] physical tag associated to the Axis"
     WRITE(*,'(a7,23x,a)')  "INTEGER",": [optional] physical tag associated to the Torch wall"
-    WRITE(*,'(a12,18x,a)') "CHARACTER*50",": name of the output gmsh file"
-    WRITE(*,'(a12,18x,a)') "CHARACTER*50",": name of the output dat file"
     WRITE(*,'(a4,26x,a)')  "REAL",": Icoil, intensity of the electric current in the coil"
-    WRITE(*,'(a4,26x,a)')  "REAL",": sigma, electric conductivity of the plasma"
     WRITE(*,'(a4,26x,a)')  "REAL",": excitation frequency [Herz] of the coil"
     WRITE(*,'(a7,23x,a)')  "INTEGER",": number of coils"
     WRITE(*,'(a9,21x,a)')  "REAL REAL",": axial and radial coordinates of each coil"
@@ -119,15 +113,13 @@ SUBROUTINE print_parameters(file_name)
     INTEGER(ki) :: i
     
     WRITE(*,*) "The following parameters were read from parameter file '",trim(file_name),"'"
-    WRITE(*,'(a50,a)')          mesh_file,": name of mesh file"
+    WRITE(*,'(a40,a)')          mesh_file,": name of mesh file"
+    WRITE(*,'(a40,a)')          file_gmsh,": name of the output gmsh file"
     WRITE(*,'(i9,41x,a)')       nbrBC,": number of boundary types as built in gmsh, see"
     DO i=1,nbrBC
       WRITE(*,'(i9,41x,a)')     CLTable(1,i),": boundary physical tag"
     ENDDO
-    WRITE(*,'(a50,a)')          file_gmsh,": name of the output gmsh file"
-    WRITE(*,'(a50,a)')          file_dat,": name of the output dat file"
     WRITE(*,'(ES15.7E3,35x,a)') Icoil,": Icoil, intensity of the electric current in the coil"
-    WRITE(*,'(ES15.7E3,35x,a)') sigma,": sigma, electric conductivity of the plasma"
     WRITE(*,'(ES15.7E3,35x,a)') frequency,": excitation frequency [Herz] of the coil"
     WRITE(*,'(i9,41x,a)')       nbrCoils,": number of coils"
     DO i=1,nbrCoils
