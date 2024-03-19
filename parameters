@@ -1,5 +1,5 @@
-Mesh_rectangle_0.100_sig100_init.msh    : name of mesh file
-Mesh_rectangle_0.100_sig100_sol.msh     : name of the output, gmsh format
+vki_rectangle_0.100_init_null.msh                    : name of mesh file
+vki_rectangle_0.100_sol_null.msh                     : name of the output, gmsh format
 3                             : number of boundary types, the next 3 lines
 1                             : Far field, physical tag in gmsh
 2                             : Axis, physical tag in gmsh

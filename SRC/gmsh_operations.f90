@@ -92,8 +92,6 @@ SUBROUTINE write_gmsh()
     INTEGER(ki) :: ierr, i, fin, numdigits
     CHARACTER(LEN=2) :: numdig
     CHARACTER(LEN=9) :: formatreal
-    REAL(kr)         :: tmp1,n1r,n2r,n3r,n1z,n2z,n3z,det,r123
-    REAL(kr)         :: Brr(nbrElem),Bri(nbrElem),Bzr(nbrElem),Bzi(nbrElem)
     
     fin = 0
     formatreal = 'ES24.15E3'
@@ -101,69 +99,40 @@ SUBROUTINE write_gmsh()
     CALL get_number_digits_integer(nbrNodes,numdigits)
     WRITE(numdig,'(A,I1)') 'I',numdigits+1
         
-       OPEN(UNIT=10,FILE=file_gmsh,STATUS="replace",IOSTAT=ierr,FORM='formatted')
-       WRITE(10,'(T1,A11)') "$MeshFormat"
-       WRITE(10,'(T1,A7)') "2.2 0 8"
-       WRITE(10,'(T1,A14)') "$EndMeshFormat"
-       WRITE(10,'(T1,A6)') "$Nodes"
-       
-       WRITE(10,'(T1,'//numdig//')') nbrNodes
-       WRITE(10,'(T1,'//numdig//',2'//formatreal//',I2)') (i, node(i,:),0,i=1,nbrNodes)
-       WRITE(10,'(T1,A9)') "$EndNodes"
-       WRITE(10,'(T1,A9)') "$Elements"
-       WRITE(10,'(T1,'//numdig//')') nbrElem+nbrFront
-       WRITE(10,'(T1,'//numdig//',2I2,'//numdig//',I2,2'//numdig//')') (i,1,2,front(i,3),1,front(i,1:2),i=1,nbrFront)       
-       DO i=1,nbrElem
-         IF (nbr_nodes_per_elem(i) .EQ. 3) THEN 
-           write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,3'//numdig//')') i+nbrFront,2,2,elem(i,5),1,elem(i,1:3)
-           r123 = ( node(elem(i,1),2) + node(elem(i,2),2) + node(elem(i,3),2) ) / 3.0d00
-           n1z =  node(elem(i,3),2) - node(elem(i,2),2)! -r2+r3
-           n2z =  node(elem(i,1),2) - node(elem(i,3),2) ! -r3+r1
-           n3z =  node(elem(i,2),2) - node(elem(i,1),2) ! -r1+r2
-           n1r = -node(elem(i,3),1) + node(elem(i,2),1) ! -z3+z2
-           n2r = -node(elem(i,1),1) + node(elem(i,3),1) ! -z1+z3
-           n3r = -node(elem(i,2),1) + node(elem(i,1),1) ! -z2+z1 
-           det = (n3r*n2z)-(n2r*n3z)
-           ! dEi/dz
-           Brr(i) = ( n1z*(U0(2*elem(i,1))+Ecoils(elem(i,1))) + &
-     &                n2z*(U0(2*elem(i,2))+Ecoils(elem(i,2))) + &
-     &                n3z*(U0(2*elem(i,3))+Ecoils(elem(i,3))) ) / (det*omega)
-           ! dEr/dz
-           Bri(i) = - ( n1z*U0(2*elem(i,1)-1) + &
-     &                  n2z*U0(2*elem(i,2)-1) + &
-     &                  n3z*U0(2*elem(i,3)-1) ) / (det*omega)
-           ! dEi/dr
-           tmp1 = ( n1r*(U0(2*elem(i,1))+Ecoils(elem(i,1))) + &
-     &              n2r*(U0(2*elem(i,2))+Ecoils(elem(i,2))) + &
-     &              n3r*(U0(2*elem(i,3))+Ecoils(elem(i,3))) ) / det
-           Bzr(i) = - ( tmp1 + (U0(2*elem(i,1))+Ecoils(elem(i,1)) + &
-     &                          U0(2*elem(i,2))+Ecoils(elem(i,2)) + &
-     &                          U0(2*elem(i,3))+Ecoils(elem(i,3)))/(3.0d00*r123) ) / omega
-           ! dEr/dr
-           tmp1 = ( n1r*U0(2*elem(i,1)-1) + &
-     &              n2r*U0(2*elem(i,2)-1) + &
-     &              n3r*U0(2*elem(i,3)-1) ) / det
-           Bzi(i) = ( tmp1 + ( U0(2*elem(i,1)-1) + U0(2*elem(i,2)-1) + U0(2*elem(i,3)-1) )/(3.0d00*r123) ) / omega 
-                      
-         ELSE IF (nbr_nodes_per_elem(i) .EQ. 4) THEN 
-           write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,4'//numdig//')') i+nbrFront,3,2,elem(i,5),1,elem(i,1:4)
-         END IF 
-       ENDDO  
-       WRITE(10,'(T1,A12)') "$EndElements"
+    OPEN(UNIT=10,FILE=file_gmsh,STATUS="replace",IOSTAT=ierr,FORM='formatted')
+    WRITE(10,'(T1,A11)') "$MeshFormat"
+    WRITE(10,'(T1,A7)') "2.2 0 8"
+    WRITE(10,'(T1,A14)') "$EndMeshFormat"
+    WRITE(10,'(T1,A6)') "$Nodes"
+    
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//',2'//formatreal//',I2)') (i, node(i,:),0,i=1,nbrNodes)
+    WRITE(10,'(T1,A9)') "$EndNodes"
+    WRITE(10,'(T1,A9)') "$Elements"
+    WRITE(10,'(T1,'//numdig//')') nbrElem+nbrFront
+    WRITE(10,'(T1,'//numdig//',2I2,'//numdig//',I2,2'//numdig//')') (i,1,2,front(i,3),1,front(i,1:2),i=1,nbrFront)    
+    DO i=1,nbrElem
+      IF (nbr_nodes_per_elem(i) .EQ. 3) THEN 
+        write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,3'//numdig//')') i+nbrFront,2,2,elem(i,5),1,elem(i,1:3)
+      ELSE IF (nbr_nodes_per_elem(i) .EQ. 4) THEN 
+        write(10,'(T1,'//numdig//',2I2,'//numdig//',I2,4'//numdig//')') i+nbrFront,3,2,elem(i,5),1,elem(i,1:4)
+      END IF 
+    ENDDO  
+    WRITE(10,'(T1,A12)') "$EndElements"
     
     !*************************************
     ! Write the electric field due to the coils
-    WRITE(10,'(T1,A9)') "$NodeData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A9)') '"E_coils"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Ecoils(i),i=1,nbrNodes)
-    WRITE(10,'(T1,A12)') "$EndNodeData"
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A9)') '"E_coils"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Ecoils(i),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the induced electric field
@@ -181,17 +150,17 @@ SUBROUTINE write_gmsh()
     
     !*************************************
     ! Write the induced electric field
-    WRITE(10,'(T1,A9)') "$NodeData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A16)') '"E_induced_imag"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, U0(2*i),i=1,nbrNodes)
-    WRITE(10,'(T1,A12)') "$EndNodeData"
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A16)') '"E_induced_imag"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, U0(2*i),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the total electric field
@@ -209,77 +178,75 @@ SUBROUTINE write_gmsh()
     
     !*************************************
     ! Write the norm of the total electric field
-    WRITE(10,'(T1,A9)') "$NodeData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A12)') '"E_tot_norm"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, sqrt(U0(2*i-1)**2 + (U0(2*i)+Ecoils(i))**2),i=1,nbrNodes)
-    WRITE(10,'(T1,A12)') "$EndNodeData"
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A12)') '"E_tot_norm"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, sqrt(U0(2*i-1)**2 + (U0(2*i)+Ecoils(i))**2),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the phase of the total electric field
-    WRITE(10,'(T1,A9)') "$NodeData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A13)') '"E_tot_phase"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 180.0d00/pi*atan2(U0(2*i)+Ecoils(i),U0(2*i-1)),i=1,nbrNodes)
-    WRITE(10,'(T1,A12)') "$EndNodeData"
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A13)') '"E_tot_phase"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 180.0d00/pi*atan2(U0(2*i)+Ecoils(i),U0(2*i-1)),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the Joule heating
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A16)') '"Joule heating"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, dissJoule(i),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the Lorentz force
     WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A16)') '"Joule heating"'
+    WRITE(10,'(T1,A21)') '"Lorentz force axial"'
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,'//numdig//')') 0
     WRITE(10,'(T1,A1)') "3"
     WRITE(10,'(T1,'//numdig//')') 0
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,'//numdig//')') nbrNodes
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, 0.5d00*sigma_in(i)*(U0(2*i-1)**2+U0(2*i)**2),i=1,nbrNodes)
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Fax(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    WRITE(10,'(T1,A9)') "$NodeData"
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,A22)') '"Lorentz force radial"'
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') 0
+    WRITE(10,'(T1,A1)') "3"
+    WRITE(10,'(T1,'//numdig//')') 0
+    WRITE(10,'(T1,A1)') "1"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Frad(i),i=1,nbrNodes)
     WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
-    ! Write the magnetic field, radial component, real part
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A17)') '"Magnetic_radial"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 0   ! 1st time step = real part
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, Brr(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !*************************************
-    ! Write the magnetic field, radial component, imaginary part
-    WRITE(10,'(T1,A12)') "$ElementData"
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A17)') '"Magnetic_radial"'
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') 0
-    WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 1   ! 2nd time step = imag part
-    WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, Bri(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
-    
-    !*************************************
     ! Write the magnetic field, axial component, real part
-    WRITE(10,'(T1,A12)') "$ElementData"
+    WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,A16)') '"Magnetic_axial"'
     WRITE(10,'(T1,A1)') "1"
@@ -287,23 +254,51 @@ SUBROUTINE write_gmsh()
     WRITE(10,'(T1,A1)') "3"
     WRITE(10,'(T1,'//numdig//')') 0   ! 1st time step = real part
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, Bzr(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Bzr(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     ! Write the magnetic field, axial component, imaginary part
-    WRITE(10,'(T1,A12)') "$ElementData"
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A16)') '"Magnetic_axial"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 1   ! 2nd time step = imaginary part
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Bzi(i),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the magnetic field, radial component, real part
+    WRITE(10,'(T1,A9)') "$NodeData"
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,A16)') '"Magnetic_axial"'
+    WRITE(10,'(T1,A17)') '"Magnetic_radial"'
     WRITE(10,'(T1,A1)') "1"
     WRITE(10,'(T1,'//numdig//')') 0
     WRITE(10,'(T1,A1)') "3"
-    WRITE(10,'(T1,'//numdig//')') 1   ! 2nd time step = imaginary part
+    WRITE(10,'(T1,'//numdig//')') 0   ! 1st time step = real part
     WRITE(10,'(T1,A1)') "1"
-    WRITE(10,'(T1,'//numdig//')') nbrElem
-    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i+nbrFront, Bzi(i),i=1,nbrElem)
-    WRITE(10,'(T1,A15)') "$EndElementData"
+    WRITE(10,'(T1,'//numdig//')') nbrNodes
+    WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Brr(i),i=1,nbrNodes)
+    WRITE(10,'(T1,A12)') "$EndNodeData"
+    
+    !*************************************
+    ! Write the magnetic field, radial component, imaginary part
+    ! WRITE(10,'(T1,A9)') "$NodeData"
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,A17)') '"Magnetic_radial"'
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') 0
+    ! WRITE(10,'(T1,A1)') "3"
+    ! WRITE(10,'(T1,'//numdig//')') 1   ! 2nd time step = imaginary part
+    ! WRITE(10,'(T1,A1)') "1"
+    ! WRITE(10,'(T1,'//numdig//')') nbrNodes
+    ! WRITE(10,'(T1,'//numdig//','//formatreal//')') (i, Bri(i),i=1,nbrNodes)
+    ! WRITE(10,'(T1,A12)') "$EndNodeData"
     
     !*************************************
     CLOSE(UNIT=10)
@@ -314,9 +309,9 @@ END SUBROUTINE write_gmsh
 ! SUBROUTINE read_gmsh
 !  Goal: read the mesh and the initial solution in the Gmsh .msh format
 !##########################################################
-SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
+SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,stencilElem,&
 &                    nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,skip_data,ok)
-    USE module_icp, only : kr,ki,nbvar,time_begin, time_end,sigma_in
+    USE module_icp, only : kr,ki,nbvar,maxstencil,zero,time_begin, time_end,sigma_in
     IMPLICIT NONE
 
     ! Subroutine parameters
@@ -326,12 +321,13 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     REAL(kr), INTENT(OUT)    :: node(nbrNodes,2)
     INTEGER(ki), INTENT(OUT)    :: elem(nbrElem,5)
     INTEGER(ki), INTENT(OUT)    :: front(nbrFront,4)
+    INTEGER(ki), INTENT(OUT)    :: stencilElem(nbrNodes,maxstencil+1)
     INTEGER(ki), INTENT(OUT)    :: nbr_nodes_per_elem(nbrElem)
     CHARACTER(LEN=lengch), INTENT(IN) :: mesh_file
 
     ! Local parameters
     CHARACTER(len=256)    :: line,dataname
-    INTEGER(ki) :: i, ierr, a, b, c, d, e, nbrElemTot,nbrNodeEdge
+    INTEGER(ki) :: i, j, ierr, a, b, c, d, e, nbrElemTot,nbrNodeEdge
     INTEGER(ki) :: istep,entnump,entnumc,entnums
     INTEGER(ki) :: nodesnument,surfnument,tag
     INTEGER(ki) :: ind,indf,inde
@@ -376,6 +372,8 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     
     istep = 2
     
+    node = zero
+    
 10  DO WHILE (line .NE. "$Nodes")
       READ(10,*) line
     END DO
@@ -402,6 +400,13 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
     ! elem(:,1:4)   : node IDs composing the 2D element
     ! elem(:,5)     : physical tag of the 2D element
     
+    ! stencilElem(:,1)     : number of 2D elements around each node
+    ! stencilElem(:,2:end) : IDs of the 2D elements around each node
+    nbr_nodes_per_elem = 0
+    elem               = 0
+    front              = 0
+    stencilElem        = 0
+    
     READ(10,*) (a,a,a,front(i,3),a,front(i,1),front(i,2),i=1,nbrFront)
     
     DO i=1,nbrElem
@@ -415,6 +420,15 @@ SUBROUTINE read_gmsh(mesh_file,lengch,node,elem,nbr_nodes_per_elem,front,&
         BACKSPACE 10
         READ(10,*) a,a,a,elem(i,5),a,elem(i,1),elem(i,2),elem(i,3),elem(i,4)
       END IF
+      
+      DO j=1,nbr_nodes_per_elem(i)
+        ! Increase counter of number of elements around each node
+        a = stencilElem(elem(i,j),1) + 1
+        stencilElem(elem(i,j),1) = a
+        ! Set element ID around each node
+        stencilElem(elem(i,j),a+1) = i
+      ENDDO
+            
     END DO
     
     GOTO 50

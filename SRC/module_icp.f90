@@ -17,7 +17,8 @@
       ! REAL(kr), ALLOCATABLE :: BoundCond(:,:)   ! Imposed boundary conditions
       INTEGER(ki), ALLOCATABLE :: nbr_nodes_per_elem(:) ! see read_gmsh
       INTEGER(ki), ALLOCATABLE :: frontglob(:,:),elemglob(:,:)
-      INTEGER(ki), ALLOCATABLE :: front(:,:),elem(:,:),stencil(:,:),stiffness(:,:),nodCL(:,:)
+      INTEGER(ki), ALLOCATABLE :: front(:,:),elem(:,:),stencilElem(:,:)
+      INTEGER(ki), ALLOCATABLE :: stencil(:,:),stiffness(:,:),nodCL(:,:)
       INTEGER(ki), ALLOCATABLE :: ia(:),ja(:)
       ! INTEGER(ki), ALLOCATABLE :: ii(:),jj(:),loc2glob(:)
       INTEGER(ki) :: irank,nproc
@@ -38,7 +39,9 @@
       INTEGER(ki) :: time1,time2
       INTEGER(ki) :: time_begin(8), time_end(8), time_diff(8), seconds, milliseconds,numnz
       REAL(kr)    :: eps
-
+      
+      REAL(kr), ALLOCATABLE    :: Brr(:),Bri(:),Bzr(:),Bzi(:)
+      REAL(kr), ALLOCATABLE    :: Frad(:),Fax(:),dissJoule(:)
 !-----------------------------------------------------------------------
       END MODULE module_icp
 !-----------------------------------------------------------------------

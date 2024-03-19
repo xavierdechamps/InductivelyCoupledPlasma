@@ -49,7 +49,8 @@ add_executable(icp
 				      ${SRC_dir}/main.f90
 				      ${SRC_dir}/mem_allocate.f90
 				      ${SRC_dir}/setBC.f90
-				      ${SRC_dir}/solving.f90 )
+				      ${SRC_dir}/solving.f90 
+				      ${SRC_dir}/postpro.f90 )
 add_dependencies( icp libmodules)
 set_target_properties ( icp PROPERTIES LINKER_LANGUAGE Fortran)
 target_link_libraries( icp PUBLIC libmodules

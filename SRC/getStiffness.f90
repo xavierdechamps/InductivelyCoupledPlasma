@@ -78,7 +78,7 @@
       nz(1:3) = (/n1z,n2z,n3z/)
       nr(1:3) = (/n1r,n2r,n3r/)
       det = (n3r*n2z)-(n2r*n3z)
-      surf = abs(det)*0.5
+      surf = abs(det)*0.5d00
       r123 = r1 + r2 + r3
       
       ! Shape functions at the quadrature points

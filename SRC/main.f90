@@ -44,7 +44,7 @@ PROGRAM main
     CALL init()
     
     ! Read the mesh and the value of sigma in the torch
-    CALL read_gmsh(mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,&
+    CALL read_gmsh(mesh_file,length_names,node,elem,nbr_nodes_per_elem,front,stencilElem,&
 &                  nbrNodes,nbrElem,nbrTris,nbrQuads,nbrFront,0,ok)
     IF (ok == 0) THEN
       WRITE(*,*) "The program hasn't started because of a problem during the reading of the mesh"
@@ -62,7 +62,10 @@ PROGRAM main
 
    CALL solve(ok)
    
-   if (ok.eq.1) CALL write_gmsh(ok)
+   if (ok.eq.1) THEN
+      CALL postpro()
+      CALL write_gmsh(ok)
+   end if
    
 200 continue
     if (irank.eq.0) write(*,*) "End of the simulation"
